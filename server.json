@@ -31,7 +31,7 @@
         },
         {
           "name": "BSC_DATA_DIR",
-          "description": "Directory for SQLite database files (one per GSC property)",
+          "description": "Directory for SQLite database files. Defaults to ~/seo-audits/better-search-console (cross-platform).",
           "isRequired": false,
           "format": "string",
           "isSecret": false

@@ -1,5 +1,6 @@
 import { existsSync, mkdirSync } from 'fs';
 import { join } from 'path';
+import { homedir } from 'os';
 
 /**
  * Sanitize a GSC site URL into a safe filename.
@@ -20,10 +21,17 @@ export function sanitizeSiteUrl(siteUrl: string): string {
 }
 
 /**
- * Get the data directory from BSC_DATA_DIR env var, with fallback.
+ * Get the data directory for SQLite databases.
+ * Priority: BSC_DATA_DIR env var > cross-platform home directory fallback.
+ *
+ * Defaults:
+ *   Windows: C:\seo-audits\better-search-console
+ *   macOS:   ~/seo-audits/better-search-console
+ *   Linux:   ~/seo-audits/better-search-console
  */
 export function getDataDir(): string {
-  const dataDir = process.env.BSC_DATA_DIR || join(process.cwd(), 'data');
+  const dataDir = process.env.BSC_DATA_DIR
+    || join(homedir(), 'seo-audits', 'better-search-console');
   if (!existsSync(dataDir)) {
     mkdirSync(dataDir, { recursive: true });
   }

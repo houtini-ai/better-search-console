@@ -28,12 +28,21 @@ An MCP server that syncs Google Search Console data into local SQLite databases 
       "command": "node",
       "args": ["C:\\MCP\\better-search-console\\dist\\index.js"],
       "env": {
-        "GOOGLE_APPLICATION_CREDENTIALS": "C:\\path\\to\\service-account.json"
+        "GOOGLE_APPLICATION_CREDENTIALS": "C:\\path\\to\\service-account.json",
+        "BSC_DATA_DIR": "C:\\seo-audits\\better-search-console"
       }
     }
   }
 }
 ```
+
+`BSC_DATA_DIR` is optional. If omitted, databases are stored in a cross-platform default:
+
+| OS | Default path |
+|---|---|
+| Windows | `C:\Users\<you>\seo-audits\better-search-console` |
+| macOS | `~/seo-audits/better-search-console` |
+| Linux | `~/seo-audits/better-search-console` |
 
 ### First run
 
@@ -57,7 +66,7 @@ Tell Claude: *"Show me my search console data"* — it will use the `setup` tool
 
 ## Database schema
 
-Each property gets its own SQLite database in the `data/` directory. The main table:
+Each property gets its own SQLite database in the data directory (see `BSC_DATA_DIR` above). The main table:
 
 ```sql
 SELECT date, query, page, device, country, clicks, impressions, ctr, position
@@ -85,7 +94,7 @@ npm run dev
 
 ```
 src/
-  core/           Database, GscClient, SyncManager, DataSync
+  core/           Database, GscClient, SyncManager
   tools/          Tool implementations (one file per tool)
   types/          TypeScript type definitions
   ui/             Dashboard, overview, and sync progress UIs (Vite + ext-apps)
