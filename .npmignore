@@ -1,0 +1,22 @@
+# Source and development
+src/
+docs/
+test/
+.claude/
+.github/
+*.md
+!README.md
+
+# Development config
+tsconfig.server.json
+vite.config.ts
+
+# Images and artefacts
+*.jpg
+*.png
+*.b64
+*.base64.txt
+logo-to-base64.mjs
+
+# Data
+data/

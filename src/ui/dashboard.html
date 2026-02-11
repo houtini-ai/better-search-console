@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Better Search Console</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div class="dashboard" id="app">
+    <div class="loading" id="loading">Loading dashboard data</div>
+
+    <div id="content" style="display:none">
+      <!-- Header -->
+      <div class="header">
+        <div style="display:flex;align-items:center;gap:12px">
+          <a href="https://houtini.com" target="_blank" rel="noopener" class="logo-link">
+            <img src="data:image/jpeg;base64,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" alt="Houtini" class="logo" id="houtini-logo" />
+          </a>
+          <div>
+            <h1>Better Search Console</h1>
+            <div class="site-url" id="site-url"></div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px">
+          <div class="metric-toggles" id="metric-toggles">
+            <button class="toggle-btn active" data-metric="clicks" title="Clicks">
+              <span class="toggle-dot" style="background:var(--cyan)"></span>
+            </button>
+            <button class="toggle-btn active" data-metric="impressions" title="Impressions">
+              <span class="toggle-dot" style="background:var(--purple)"></span>
+            </button>
+            <button class="toggle-btn" data-metric="ctr" title="CTR">
+              <span class="toggle-dot" style="background:var(--orange)"></span>
+            </button>
+            <button class="toggle-btn" data-metric="position" title="Position">
+              <span class="toggle-dot" style="background:#f59e0b"></span>
+            </button>
+          </div>
+          <div class="search-type-selector" id="search-type-selector">
+            <button class="st-btn active" data-type="web">Web</button>
+            <button class="st-btn" data-type="discover">Discover</button>
+            <button class="st-btn" data-type="googleNews">News</button>
+            <button class="st-btn" data-type="image">Image</button>
+            <button class="st-btn" data-type="video">Video</button>
+          </div>
+          <div class="date-picker-wrapper" id="date-picker-wrapper">
+            <button class="date-picker-trigger" id="date-picker-trigger">
+              <span id="date-picker-label">3 months</span>
+              <span class="dp-arrow">&#9662;</span>
+            </button>
+            <div class="date-picker-panel" id="date-picker-panel" style="display:none">
+              <div class="dp-columns">
+                <!-- Left column: comparison -->
+                <div class="dp-col dp-col-left">
+                  <div class="dp-section-title">Comparison</div>
+                  <div class="dp-radio-group" id="dp-comparison">
+                    <label><input type="radio" name="comparison" value="previous_period" checked /> Previous Period</label>
+                    <label><input type="radio" name="comparison" value="year_over_year" /> Year Over Year</label>
+                    <label><input type="radio" name="comparison" value="previous_month" /> Previous Month</label>
+                    <label><input type="radio" name="comparison" value="disabled" /> Disabled</label>
+                  </div>
+                  <div class="dp-section-title" style="margin-top:16px">Settings</div>
+                  <div class="dp-checkbox-group" id="dp-settings">
+                    <label><input type="checkbox" id="dp-prior-trend" checked /> Prior trend line</label>
+                    <label><input type="checkbox" id="dp-match-weekdays" /> Match weekdays</label>
+                    <label><input type="checkbox" id="dp-show-change" checked /> Show change %</label>
+                  </div>
+                </div>
+                <!-- Right column: date presets -->
+                <div class="dp-col dp-col-right">
+                  <div class="dp-section-title">Quick</div>
+                  <div class="dp-presets">
+                    <button data-range="7d" data-label="7 days">7 days</button>
+                    <button data-range="14d" data-label="14 days">14 days</button>
+                    <button data-range="28d" data-label="28 days">28 days</button>
+                  </div>
+                  <div class="dp-section-title">Periods</div>
+                  <div class="dp-presets">
+                    <button data-range="lw" data-label="Last week">Last week</button>
+                    <button data-range="tm" data-label="This month">This month</button>
+                    <button data-range="lm" data-label="Last month">Last month</button>
+                    <button data-range="tq" data-label="This quarter">This quarter</button>
+                    <button data-range="lq" data-label="Last quarter">Last quarter</button>
+                    <button data-range="ytd" data-label="Year to date">Year to date</button>
+                  </div>
+                  <div class="dp-section-title">Extended</div>
+                  <div class="dp-presets">
+                    <button data-range="3m" data-label="3 months" class="active">3 months</button>
+                    <button data-range="6m" data-label="6 months">6 months</button>
+                    <button data-range="8m" data-label="8 months">8 months</button>
+                    <button data-range="12m" data-label="12 months">12 months</button>
+                    <button data-range="16m" data-label="16 months">16 months</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sync Info -->
+      <div class="sync-info" id="sync-info" style="display:none">
+        Last synced: <span id="last-sync-date"></span>
+      </div>
+
+      <!-- Hero Metrics -->
+      <div class="metrics-bar">
+        <div class="metric-card clicks">
+          <div class="label">Total Clicks</div>
+          <div class="value" id="metric-clicks">—</div>
+          <div class="change" id="change-clicks"></div>
+        </div>
+        <div class="metric-card impressions">
+          <div class="label">Total Impressions</div>
+          <div class="value" id="metric-impressions">—</div>
+          <div class="change" id="change-impressions"></div>
+        </div>
+        <div class="metric-card ctr">
+          <div class="label">Avg CTR</div>
+          <div class="value" id="metric-ctr">—</div>
+          <div class="change" id="change-ctr"></div>
+        </div>
+        <div class="metric-card position">
+          <div class="label">Avg Position</div>
+          <div class="value" id="metric-position">—</div>
+          <div class="change" id="change-position"></div>
+        </div>
+      </div>
+
+      <!-- Trend Chart -->
+      <div class="chart-container">
+        <canvas id="trend-chart"></canvas>
+      </div>
+
+      <!-- Tables -->
+      <div class="tables-row">
+        <!-- Queries Table -->
+        <div class="table-card">
+          <div class="table-header">
+            <h3>Top Queries</h3>
+            <div style="display:flex;gap:8px;align-items:center">
+              <div class="tabs" id="queries-tabs">
+                <button class="active" data-filter="all">All</button>
+                <button data-filter="growing">Growing</button>
+                <button data-filter="declining">Declining</button>
+              </div>
+              <button class="expand-btn" id="expand-queries">EXPAND</button>
+            </div>
+          </div>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Query</th>
+                <th class="num">Clicks</th>
+                <th class="num">Impr</th>
+                <th class="num">Change</th>
+              </tr>
+            </thead>
+            <tbody id="queries-body"></tbody>
+          </table>
+        </div>
+
+        <!-- Pages Table -->
+        <div class="table-card">
+          <div class="table-header">
+            <h3>Top Pages</h3>
+            <div style="display:flex;gap:8px;align-items:center">
+              <div class="tabs" id="pages-tabs">
+                <button class="active" data-filter="all">All</button>
+                <button data-filter="growing">Growing</button>
+                <button data-filter="declining">Declining</button>
+              </div>
+              <button class="expand-btn" id="expand-pages">EXPAND</button>
+            </div>
+          </div>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Page</th>
+                <th class="num">Clicks</th>
+                <th class="num">Impr</th>
+                <th class="num">Change</th>
+              </tr>
+            </thead>
+            <tbody id="pages-body"></tbody>
+          </table>
+        </div>
+      </div>
+      <!-- Below-the-fold: Countries + Branded -->
+      <div class="tables-row" id="below-fold-row" style="display:none">
+        <!-- Countries -->
+        <div class="table-card">
+          <div class="table-header">
+            <h3>Countries</h3>
+            <div style="display:flex;gap:8px;align-items:center">
+              <div class="tabs" id="countries-tabs">
+                <button class="active" data-filter="all">All</button>
+                <button data-filter="growing">Growing</button>
+                <button data-filter="declining">Declining</button>
+              </div>
+              <button class="expand-btn" id="expand-countries">EXPAND</button>
+            </div>
+          </div>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Country</th>
+                <th class="num">Clicks</th>
+                <th class="num">Impr</th>
+                <th class="num">Change</th>
+              </tr>
+            </thead>
+            <tbody id="countries-body"></tbody>
+          </table>
+        </div>
+
+        <!-- Branded Split -->
+        <div class="table-card" id="branded-card" style="display:none">
+          <div class="table-header">
+            <h3>Branded vs Non-Branded</h3>
+          </div>
+          <div class="branded-summary" id="branded-summary"></div>
+          <div class="branded-chart-container">
+            <canvas id="branded-chart"></canvas>
+          </div>
+          <div style="padding:8px 16px 12px;font-size:11px;color:var(--text-muted)">
+            Note: Branded + non-branded will not equal total clicks due to anonymised queries.
+          </div>
+        </div>
+      </div>
+
+      <!-- Ranking Buckets + New/Lost Rankings -->
+      <div class="tables-row" id="rankings-row" style="display:none">
+        <!-- Ranking Buckets -->
+        <div class="table-card">
+          <div class="table-header">
+            <h3>Position Distribution</h3>
+          </div>
+          <div class="ranking-buckets" id="ranking-buckets"></div>
+        </div>
+
+        <!-- New/Lost Rankings -->
+        <div class="table-card">
+          <div class="table-header">
+            <h3 id="newlost-title">New Rankings</h3>
+            <div class="tabs" id="newlost-tabs">
+              <button class="active" data-tab="new">New</button>
+              <button data-tab="lost">Lost</button>
+            </div>
+          </div>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Query</th>
+                <th class="num">Clicks</th>
+                <th class="num">Impr</th>
+                <th class="num">Position</th>
+              </tr>
+            </thead>
+            <tbody id="newlost-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Modal template -->
+  <div class="modal-overlay" id="modal" style="display:none">
+    <div class="modal">
+      <div class="modal-header">
+        <div style="display:flex;align-items:center;gap:12px">
+          <h3 id="modal-title"></h3>
+          <div class="tabs" id="modal-tabs">
+            <button class="active" data-filter="all">All</button>
+            <button data-filter="growing">Growing</button>
+            <button data-filter="declining">Declining</button>
+          </div>
+        </div>
+        <button class="close-btn" id="modal-close">&times;</button>
+      </div>
+      <table class="data-table modal-table">
+        <thead id="modal-thead"></thead>
+        <tbody id="modal-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script type="module" src="./dashboard.ts"></script>
+</body>
+</html>

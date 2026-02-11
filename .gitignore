@@ -1,0 +1,28 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# Data (SQLite databases - user-specific)
+data/
+
+# Environment and credentials
+.env
+*.json.key
+service-account*.json
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Development artefacts
+*.b64
+*.base64.txt
+
+# Claude Code local settings
+.claude/

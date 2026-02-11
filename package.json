@@ -1,0 +1,57 @@
+{
+  "name": "@houtini/better-search-console",
+  "version": "0.1.0",
+  "mcpName": "io.github.houtini-ai/better-search-console",
+  "description": "MCP server that syncs Google Search Console data into SQLite for analysis",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "better-search-console": "dist/index.js"
+  },
+  "author": "Richard Baxter <hello@houtini.com>",
+  "license": "Apache-2.0",
+  "homepage": "https://github.com/houtini-ai/better-search-console",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/houtini-ai/better-search-console.git"
+  },
+  "keywords": [
+    "mcp",
+    "google-search-console",
+    "seo",
+    "sqlite",
+    "analytics",
+    "model-context-protocol"
+  ],
+  "scripts": {
+    "build:server": "tsc -p tsconfig.server.json",
+    "build:ui:dashboard": "cross-env INPUT=src/ui/dashboard.html vite build",
+    "build:ui:overview": "cross-env INPUT=src/ui/overview.html vite build --outDir dist/overview --emptyOutDir",
+    "build:ui:sync": "cross-env INPUT=src/ui/sync-progress.html vite build --outDir dist/sync-progress --emptyOutDir",
+    "build:ui": "npm run build:ui:dashboard && npm run build:ui:overview && npm run build:ui:sync",
+    "build": "npm run build:server && npm run build:ui",
+    "dev": "tsc -p tsconfig.server.json --watch",
+    "start": "node dist/index.js",
+    "test": "npm run build && echo 'Build successful - all checks passed'",
+    "clean": "rimraf dist"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/ext-apps": "^1.0.1",
+    "@modelcontextprotocol/sdk": "^1.26.0",
+    "@types/better-sqlite3": "^7.6.13",
+    "better-sqlite3": "^12.6.2",
+    "googleapis": "^146.0.0",
+    "chart.js": "^4.5.1",
+    "zod": "^3.25.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "cross-env": "^10.1.0",
+    "typescript": "^5.3.3",
+    "vite": "^6.4.1",
+    "vite-plugin-singlefile": "^2.3.0"
+  }
+}

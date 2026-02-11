@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Better Search Console — Sync Progress</title>
+  <link rel="stylesheet" href="./sync-progress-styles.css" />
+</head>
+<body>
+  <div class="sync-container">
+    <div class="header">
+      <h1>Sync Progress</h1>
+      <div class="job-id" id="job-id"></div>
+    </div>
+
+    <div class="status-badge-row">
+      <span class="status-badge" id="status-badge">queued</span>
+      <span class="elapsed" id="elapsed"></span>
+    </div>
+
+    <div class="overall-progress" id="overall-progress" style="display:none">
+      <div class="progress-label">
+        <span id="overall-label">Properties</span>
+        <span id="overall-count">0 / 0</span>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill" id="overall-fill" style="width:0%"></div>
+      </div>
+    </div>
+
+    <div class="current-property" id="current-section" style="display:none">
+      <div class="progress-label">
+        <span id="current-label">Current property</span>
+        <span id="rows-count">0 rows</span>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill progress-fill--active" id="rows-fill" style="width:0%"></div>
+      </div>
+      <div class="meta-row">
+        <span id="api-calls">0 API calls</span>
+      </div>
+    </div>
+
+    <div class="results-section" id="results-section" style="display:none">
+      <h2>Results</h2>
+      <div class="results-list" id="results-list"></div>
+    </div>
+
+    <div class="actions">
+      <button class="btn-cancel" id="btn-cancel">Cancel Sync</button>
+    </div>
+  </div>
+
+  <script type="module" src="./sync-progress.ts"></script>
+</body>
+</html>
