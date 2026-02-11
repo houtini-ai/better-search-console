@@ -54,7 +54,7 @@ export function createServer(): { server: McpServer; run: () => Promise<void> } 
     'setup',
     {
       title: 'Setup — First Run',
-      description: 'First time? Start here. Connects to Google Search Console, syncs all your properties (fetches up to 16 months of data), and shows a visual overview of every site. Takes a few minutes depending on how many properties you have. After setup, use get_overview to see all sites at a glance, or get_dashboard to drill into one.',
+      description: 'First time? Start here. Connects to Google Search Console, syncs all your properties (fetches up to 3 months of data), and shows a visual overview of every site. Takes a few minutes depending on how many properties you have. After setup, use get_overview to see all sites at a glance, or get_dashboard to drill into one.',
       inputSchema: {},
       _meta: { ui: { resourceUri: overviewResourceUri } },
     },
@@ -345,10 +345,10 @@ export function createServer(): { server: McpServer; run: () => Promise<void> } 
     'sync_gsc_data',
     {
       title: 'Sync Property Data',
-      description: 'Fetch Google Search Console search analytics data into a local SQLite database. Supports full pagination to capture ALL rows (no 1,000-row limit). Default date range is 16 months. Returns immediately with a job ID — use check_sync_status to monitor progress.',
+      description: 'Fetch Google Search Console search analytics data into a local SQLite database. Supports full pagination to capture ALL rows (no 1,000-row limit). Default date range is 3 months. Pass explicit startDate for longer ranges (up to 16 months). Returns immediately with a job ID — use check_sync_status to monitor progress.',
       inputSchema: {
         siteUrl: z.string().describe('GSC property URL, e.g. "sc-domain:example.com" or "https://www.example.com/"'),
-        startDate: z.string().optional().describe('Start date (YYYY-MM-DD). Defaults to 16 months ago.'),
+        startDate: z.string().optional().describe('Start date (YYYY-MM-DD). Defaults to 3 months ago.'),
         endDate: z.string().optional().describe('End date (YYYY-MM-DD). Defaults to today.'),
         dimensions: z.array(z.string()).optional().describe('Dimensions to fetch. Defaults to ["query","page","date","device","country"].'),
         searchType: z.enum(['web', 'discover', 'googleNews', 'image', 'video']).optional().describe('Search type filter. Default: web.'),
@@ -381,9 +381,9 @@ export function createServer(): { server: McpServer; run: () => Promise<void> } 
     'sync_all_properties',
     {
       title: 'Sync All Properties',
-      description: 'Sync search analytics data for ALL accessible GSC properties in one call. Iterates through every property and syncs each one sequentially. Returns immediately with a job ID — use check_sync_status to monitor progress.',
+      description: 'Sync search analytics data for ALL accessible GSC properties in one call. Syncs up to 2 properties in parallel for faster completion. Returns immediately with a job ID — use check_sync_status to monitor progress.',
       inputSchema: {
-        startDate: z.string().optional().describe('Start date (YYYY-MM-DD). Defaults to 16 months ago (or incremental from last sync).'),
+        startDate: z.string().optional().describe('Start date (YYYY-MM-DD). Defaults to 3 months ago (or incremental from last sync).'),
         endDate: z.string().optional().describe('End date (YYYY-MM-DD). Defaults to today.'),
         dimensions: z.array(z.string()).optional().describe('Dimensions to fetch. Defaults to ["query","page","date","device","country"].'),
         searchType: z.enum(['web', 'discover', 'googleNews', 'image', 'video']).optional().describe('Search type filter. Default: web.'),

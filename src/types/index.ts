@@ -41,29 +41,6 @@ export interface FetchOptions {
   searchType?: 'web' | 'discover' | 'googleNews' | 'image' | 'video';
 }
 
-export interface ChunkResult {
-  chunkIndex: number;
-  dateFrom: string;
-  dateTo: string;
-  rowsFetched: number;
-  rowsInserted: number;
-  durationMs: number;
-  status: 'completed' | 'error';
-  error?: string;
-}
-
-export interface SyncResult {
-  siteUrl: string;
-  dateFrom: string;
-  dateTo: string;
-  rowsFetched: number;
-  rowsInserted: number;
-  durationMs: number;
-  status: 'completed' | 'error' | 'already_current' | 'cancelled';
-  error?: string;
-  chunks?: ChunkResult[];
-}
-
 export interface SyncLogEntry {
   id?: number;
   syncType: string;

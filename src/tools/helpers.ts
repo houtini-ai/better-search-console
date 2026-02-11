@@ -185,11 +185,12 @@ export function getPeriodDates(
 }
 
 /**
- * Default start date: 16 months ago (GSC max retention).
+ * Default start date: 3 months ago for fast initial sync.
+ * Users can pass startDate explicitly for longer ranges (up to 16 months).
  */
 export function defaultStartDate(): string {
   const d = new Date();
-  d.setMonth(d.getMonth() - 16);
+  d.setMonth(d.getMonth() - 3);
   return formatDate(d);
 }
 
