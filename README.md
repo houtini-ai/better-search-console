@@ -6,6 +6,8 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.3-blue?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
 [![MCP](https://img.shields.io/badge/MCP-Compatible-green?style=flat-square)](https://modelcontextprotocol.io)
 
+![Better Search Console](better-search-console.jpg)
+
 ## Why This Exists
 
 Every SEO tool that connects to an LLM has the same problem: the Google Search Console API returns 1,000 rows per request, your context window fills up fast, and you end up asking the model to reason about a tiny fraction of your data. The answers sound plausible but they're built on incomplete information.
