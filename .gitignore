@@ -25,5 +25,8 @@ Thumbs.db
 *.base64.txt
 nul
 
+# Internal docs (not for public repo)
+docs/
+
 # Claude Code local settings
 .claude/
