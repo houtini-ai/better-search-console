@@ -1,6 +1,6 @@
 {
   "name": "@houtini/better-search-console",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "mcpName": "io.github.houtini-ai/better-search-console",
   "description": "MCP server that syncs Google Search Console data into SQLite for analysis",
   "type": "module",

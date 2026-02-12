@@ -6,10 +6,10 @@
     "url": "https://github.com/houtini-ai/better-search-console",
     "source": "github"
   },
-  "version": "0.1.0",
+  "version": "1.0.0",
   "icons": [
     {
-      "src": "https://raw.githubusercontent.com/houtini-ai/better-search-console/main/houtini-logo.jpg",
+      "src": "https://raw.githubusercontent.com/houtini-ai/better-search-console/master/houtini-logo.jpg",
       "mimeType": "image/jpeg"
     }
   ],
@@ -17,7 +17,7 @@
     {
       "registryType": "npm",
       "identifier": "@houtini/better-search-console",
-      "version": "0.1.0",
+      "version": "1.0.0",
       "transport": {
         "type": "stdio"
       },

@@ -1,5 +1,5 @@
 # Source and development
-src/
+/src/
 docs/
 test/
 .claude/
