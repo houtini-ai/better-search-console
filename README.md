@@ -1,10 +1,9 @@
 # Better Search Console
 
 [![npm version](https://img.shields.io/npm/v/@houtini/better-search-console.svg?style=flat-square)](https://www.npmjs.com/package/@houtini/better-search-console)
-[![Known Vulnerabilities](https://snyk.io/test/github/houtini-ai/better-search-console/badge.svg)](https://snyk.io/test/github/houtini-ai/better-search-console)
+[![MCP Registry](https://img.shields.io/badge/MCP-Registry-blue?style=flat-square)](https://registry.modelcontextprotocol.io)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg?style=flat-square)](https://opensource.org/licenses/Apache-2.0)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.3-blue?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
-[![MCP](https://img.shields.io/badge/MCP-Compatible-green?style=flat-square)](https://modelcontextprotocol.io)
 
 ![Better Search Console](better-search-console.jpg)
 
@@ -14,63 +13,73 @@ Every SEO tool that connects to an LLM has the same problem: the Google Search C
 
 This MCP server takes a different approach. It downloads your entire Search Console dataset into a local SQLite database, then gives Claude pre-built SQL queries for every standard SEO analysis type. Claude never sees the raw data. It sees query results: the top 50 declining pages, the queries ranking 5-20 with high impressions, the device breakdown for a specific URL pattern. Precise answers from complete data, using a few hundred tokens instead of tens of thousands.
 
-The experiment started with ext-apps, the MCP specification's support for interactive UI components. The dashboard, overview grid, and sync progress views all render as iframes inside Claude Desktop. Whether this represents the future of MCP tooling or a novelty is still an open question. But the core architecture of local SQLite plus structured SQL queries works well regardless.
-
 ### What you get
 
 One database per GSC property, synced in the background with full pagination (no row limits). Sixteen pre-built insight queries covering the things SEOs check repeatedly. Custom SQL for everything else. Automatic data retention that prunes low-value rows after each sync to keep databases from growing without bound. The data stays on your machine and the queries run in milliseconds.
 
 ## Quick Start
 
-### Prerequisites
+### Step 1: Set Up Google Credentials
 
-You'll need three things before this works:
+You need a Google Cloud service account with Search Console API access. Here is how to create one from scratch.
 
-1. **A Google Cloud service account** with the Search Console API enabled
-2. **The service account email added as a user** on each GSC property you want to access (Settings > Users and permissions in Search Console)
-3. **Node.js 18+**
+#### Create a Google Cloud project and enable the API
 
-If you haven't created a service account before: go to the [Google Cloud Console](https://console.cloud.google.com/), create a project, enable the "Google Search Console API", create a service account, and download the JSON key file. The whole process takes about five minutes.
+1. Go to the [Google Cloud Console](https://console.cloud.google.com/)
+2. Create a new project (or select an existing one)
+3. Go to **APIs and Services > Library**
+4. Search for **Google Search Console API** and click **Enable**
 
-### Claude Desktop Configuration
+#### Create a service account
+
+1. Go to **APIs and Services > Credentials**
+2. Click **Create Credentials > Service account**
+3. Give it a name (e.g. `search-console-mcp`) and click **Create and Continue**
+4. Skip the optional role and user access steps, click **Done**
+5. Click on the service account you just created
+6. Go to the **Keys** tab
+7. Click **Add Key > Create new key > JSON**
+8. Save the downloaded JSON file somewhere safe (e.g. `~/credentials/gsc-service-account.json`)
+
+For full details on creating credentials, see the [Google Workspace credentials guide](https://developers.google.com/workspace/guides/create-credentials).
+
+#### Grant the service account access to Search Console
+
+1. Open the JSON key file and copy the `client_email` value (it looks like `name@project.iam.gserviceaccount.com`)
+2. Go to [Google Search Console](https://search.google.com/search-console/)
+3. Select a property
+4. Go to **Settings > Users and permissions > Add user**
+5. Paste the service account email and set permission to **Full**
+6. Repeat for each property you want to access
+
+### Step 2: Add to Claude Desktop
 
 Add this to your Claude Desktop config file:
 
-**Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
-**macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
-
-#### Using npx (recommended)
+- **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
+- **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
 
 ```json
 {
   "mcpServers": {
     "better-search-console": {
       "command": "npx",
-      "args": ["@houtini/better-search-console"],
+      "args": ["-y", "@houtini/better-search-console"],
       "env": {
-        "GOOGLE_APPLICATION_CREDENTIALS": "/path/to/service-account.json"
+        "GOOGLE_APPLICATION_CREDENTIALS": "/path/to/your-service-account.json"
       }
     }
   }
 }
 ```
 
-#### Using a local build
+Replace `/path/to/your-service-account.json` with the actual path to the JSON key file you downloaded in Step 1.
 
-```json
-{
-  "mcpServers": {
-    "better-search-console": {
-      "command": "node",
-      "args": ["C:\\MCP\\better-search-console\\dist\\index.js"],
-      "env": {
-        "GOOGLE_APPLICATION_CREDENTIALS": "C:\\path\\to\\service-account.json",
-        "BSC_DATA_DIR": "C:\\seo-audits\\better-search-console"
-      }
-    }
-  }
-}
-```
+### Step 3: Restart Claude Desktop and go
+
+Tell Claude: *"Show me my search console data"*
+
+The `setup` tool handles the rest: discovers your properties, syncs them all in the background, and shows an overview grid with sparkline trends. Depending on how much data you have, initial sync takes anywhere from 30 seconds to a few minutes.
 
 ### Environment Variables
 
@@ -78,12 +87,6 @@ Add this to your Claude Desktop config file:
 |----------|----------|---------|--------------|
 | `GOOGLE_APPLICATION_CREDENTIALS` | Yes | - | Path to the service account JSON key file |
 | `BSC_DATA_DIR` | No | `~/seo-audits/better-search-console` | Where SQLite databases are stored |
-
-### First Run
-
-Tell Claude: *"Show me my search console data"*
-
-The `setup` tool handles the rest: discovers your properties, syncs them all in the background, and shows an overview grid with sparkline trends. Depending on how much data you have, initial sync takes anywhere from 30 seconds to a few minutes.
 
 ## Tools
 
@@ -167,7 +170,7 @@ On a site with 9.8 million rows and a 6GB database, the initial prune deleted 6.
 
 ## Custom SQL
 
-The `query_gsc_data` tool accepts any SELECT query against the `search_analytics` table. INSERT, UPDATE, DELETE, DROP, ALTER, and CREATE are blocked.
+The `query_gsc_data` tool accepts any SELECT query against the `search_analytics` table. INSERT, UPDATE, DELETE, DROP, ALTER, CREATE, and PRAGMA are blocked. Queries without an explicit LIMIT are automatically capped at 10,000 rows.
 
 ### Schema
 
@@ -202,7 +205,7 @@ LIMIT 20
 Content decay detection:
 
 ```sql
-SELECT page, 
+SELECT page,
   SUM(CASE WHEN date >= date('now', '-28 days') THEN clicks END) as recent,
   SUM(CASE WHEN date BETWEEN date('now', '-56 days') AND date('now', '-29 days') THEN clicks END) as prior
 FROM search_analytics
@@ -225,57 +228,6 @@ HAVING clicks > 5
 ORDER BY page, device
 ```
 
-## Architecture
-
-### How Sync Works
-
-The GSC API paginates at 25,000 rows per request. For large properties with millions of rows across 16 months of data, that means hundreds of API calls. The sync system handles this:
-
-1. Date ranges are chunked into 30-day windows
-2. Chunks run in parallel (concurrency of 3 by default)
-3. Each chunk paginates until the API returns fewer than 25,000 rows
-4. Rows are batch-inserted into SQLite with UPSERT semantics
-5. After all chunks complete, the data retention policy runs automatically
-
-Sync jobs run in the background. The `setup` tool blocks until completion for the first-run experience, but `sync_gsc_data` and `sync_all_properties` return immediately with a job ID.
-
-### ext-apps UI
-
-Three interactive views are built with Vite and `vite-plugin-singlefile`, producing self-contained HTML files served as MCP resources:
-
-- **Dashboard**: trend chart (Chart.js), hero metrics, top queries/pages tables, ranking distribution, country breakdown, new/lost queries, branded split
-- **Overview**: grid of property cards with sparklines and period-over-period changes
-- **Sync progress**: real-time progress bar with row counts and ETA
-
-Client-side code uses `@modelcontextprotocol/ext-apps` for bidirectional communication with the server. Data flows as `structuredContent` alongside the text response.
-
-### Project Structure
-
-```
-src/
-  core/
-    Database.ts         SQLite wrapper with schema, UPSERT, sync logging
-    DataRetention.ts    Prune/preview logic with configurable retention policy
-    GscClient.ts        Google Search Console API client with pagination
-    SyncManager.ts      Background sync orchestration with job tracking
-  tools/
-    compare-periods.ts  Period comparison across dimensions
-    get-dashboard.ts    Dashboard data assembly
-    get-insights.ts     16 pre-built analytical queries
-    get-overview.ts     Multi-property overview with sparklines
-    helpers.ts          Date ranges, DB paths, formatting
-    list-properties.ts  Property discovery with sync status
-    query-data.ts       Custom SQL execution with safety checks
-  types/
-    index.ts            Shared TypeScript interfaces
-  ui/
-    dashboard.html/ts   Dashboard ext-apps UI
-    overview.html/ts    Overview grid ext-apps UI
-    sync-progress.html/ts  Sync progress ext-apps UI
-  index.ts              Entry point
-  server.ts             MCP server, tool registration, resource serving
-```
-
 ## Development
 
 ### Building from Source
@@ -287,6 +239,23 @@ npm install
 npm run build
 ```
 
+Then configure Claude Desktop to use your local build:
+
+```json
+{
+  "mcpServers": {
+    "better-search-console": {
+      "command": "node",
+      "args": ["/path/to/better-search-console/dist/index.js"],
+      "env": {
+        "GOOGLE_APPLICATION_CREDENTIALS": "/path/to/service-account.json",
+        "BSC_DATA_DIR": "/path/to/data-directory"
+      }
+    }
+  }
+}
+```
+
 ### Scripts
 
 | Command | What it does |
@@ -296,10 +265,6 @@ npm run build
 | `npm run build:ui` | Vite builds for all three UI views |
 | `npm run dev` | Watch mode for server TypeScript |
 | `npm start` | Run the compiled server |
-
-### Adding Insight Queries
-
-New insights go in `src/tools/get-insights.ts`. Each insight is a function that takes the standard params (siteUrl, dateRange, filters) and returns a SQL result. The pattern is consistent: calculate date ranges, build parameterised SQL, execute against the property database, return structured results.
 
 ## Troubleshooting
 
