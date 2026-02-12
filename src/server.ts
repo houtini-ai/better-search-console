@@ -11,6 +11,7 @@ import path from 'node:path';
 
 import { GscClient } from './core/GscClient.js';
 import { SyncManager } from './core/SyncManager.js';
+import { DataRetention } from './core/DataRetention.js';
 import { listProperties } from './tools/list-properties.js';
 import { queryData } from './tools/query-data.js';
 import { getInsights } from './tools/get-insights.js';
@@ -445,6 +446,59 @@ export function createServer(): { server: McpServer; run: () => Promise<void> } 
           return { content: [{ type: 'text', text: JSON.stringify(status, null, 2) }] };
         }
         return { content: [{ type: 'text', text: JSON.stringify({ error: `Job ${args.jobId} not found or already finished.` }) }], isError: true };
+      } catch (error) {
+        return { content: [{ type: 'text', text: JSON.stringify({ error: (error as Error).message }) }], isError: true };
+      }
+    }
+  );
+
+  // ============================================================
+  // Tool 12: prune_database — APPLY RETENTION POLICY
+  // ============================================================
+
+  server.tool(
+    'prune_database',
+    'Apply data retention policy to a synced property database. Removes low-value rows (zero clicks, low impressions) from older data while preserving all recent data and actionable historical data. Runs VACUUM afterwards to reclaim disk space. This runs automatically after each sync, but you can also trigger it manually. Use preview_prune first to see what would be deleted.',
+    {
+      siteUrl: z.string().describe('GSC property URL to prune.'),
+      recentDays: z.number().optional().describe('Days of recent data to keep in full (default: 90).'),
+      targetMinImpressions: z.number().optional().describe('For target countries: min impressions to keep zero-click rows (default: 5).'),
+      preview: z.boolean().optional().describe('If true, show what would be deleted without actually deleting. Default: false.'),
+    },
+    async (args) => {
+      try {
+        const policy: any = {};
+        if (args.recentDays !== undefined) policy.recentDays = args.recentDays;
+        if (args.targetMinImpressions !== undefined) policy.targetMinImpressions = args.targetMinImpressions;
+
+        if (args.preview) {
+          const preview = DataRetention.preview(args.siteUrl, policy);
+          const lines = [
+            `Prune preview for ${args.siteUrl}:`,
+            `  Total rows: ${preview.totalRows.toLocaleString()}`,
+            `  Would delete: ${preview.wouldDelete.toLocaleString()} (${preview.reductionPct}%)`,
+            `  Would keep: ${preview.wouldKeep.toLocaleString()}`,
+            '',
+            'Breakdown:',
+            `  Target country low-value rows: ${preview.breakdown.targetLowValue.toLocaleString()}`,
+            `  Non-target country zero-click rows: ${preview.breakdown.nonTargetZeroClick.toLocaleString()}`,
+            `  Recent rows (protected): ${preview.breakdown.recentProtected.toLocaleString()}`,
+          ];
+          return { content: [{ type: 'text', text: lines.join('\n') }] };
+        }
+
+        const result = DataRetention.prune(args.siteUrl, policy);
+        const lines = [
+          `Prune completed for ${args.siteUrl}:`,
+          `  Rows before: ${result.rowsBefore.toLocaleString()}`,
+          `  Rows deleted: ${result.rowsDeleted.toLocaleString()}`,
+          `  Rows after: ${result.rowsAfter.toLocaleString()}`,
+          `  DB size: ${(result.dbSizeBefore / 1024 / 1024).toFixed(0)} MB -> ${(result.dbSizeAfter / 1024 / 1024).toFixed(0)} MB`,
+          `  Space saved: ${((result.dbSizeBefore - result.dbSizeAfter) / 1024 / 1024).toFixed(0)} MB`,
+          `  Duration: ${(result.durationMs / 1000).toFixed(1)}s`,
+          result.vacuumed ? '  VACUUM: completed' : '  VACUUM: skipped (no changes)',
+        ];
+        return { content: [{ type: 'text', text: lines.join('\n') }] };
       } catch (error) {
         return { content: [{ type: 'text', text: JSON.stringify({ error: (error as Error).message }) }], isError: true };
       }

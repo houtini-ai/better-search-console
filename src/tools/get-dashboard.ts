@@ -193,63 +193,61 @@ export function getDashboardData(params: DashboardParams): any {
       prior.startDate, prior.endDate,
     ]);
 
-    // 6. Ranking buckets
-    const bucketRows = db.query(`
-      SELECT query, AVG(position) as avg_pos
-      FROM search_analytics
-      WHERE date BETWEEN ? AND ? AND query IS NOT NULL
-      GROUP BY query
+    // 6. Ranking buckets — computed in SQL to avoid pulling millions of rows into JS
+    const rankingBuckets = db.query(`
+      SELECT
+        CASE
+          WHEN avg_pos <= 3 THEN '1-3'
+          WHEN avg_pos <= 10 THEN '4-10'
+          WHEN avg_pos <= 20 THEN '11-20'
+          WHEN avg_pos <= 50 THEN '21-50'
+          WHEN avg_pos <= 100 THEN '51-100'
+          ELSE '100+'
+        END as bucket,
+        COUNT(*) as count
+      FROM (
+        SELECT AVG(position) as avg_pos
+        FROM search_analytics
+        WHERE date BETWEEN ? AND ? AND query IS NOT NULL
+        GROUP BY query
+      )
+      GROUP BY bucket
+      ORDER BY MIN(avg_pos)
     `, [current.startDate, current.endDate]);
 
-    const bucketCounts: Record<string, number> = { '1-3': 0, '4-10': 0, '11-20': 0, '21-50': 0, '51-100': 0, '100+': 0 };
-    for (const r of bucketRows) {
-      const p = r.avg_pos;
-      if (p <= 3) bucketCounts['1-3']++;
-      else if (p <= 10) bucketCounts['4-10']++;
-      else if (p <= 20) bucketCounts['11-20']++;
-      else if (p <= 50) bucketCounts['21-50']++;
-      else if (p <= 100) bucketCounts['51-100']++;
-      else bucketCounts['100+']++;
-    }
-    const rankingBuckets = Object.entries(bucketCounts).map(([bucket, count]) => ({ bucket, count }));
-
-    // 7. New queries (in current but not in prior)
+    // 7. New queries (in current but not in prior) — using EXCEPT for efficiency
     const newQueries = comparisonDisabled ? [] : db.query(`
-      SELECT query,
-        SUM(clicks) as clicks,
-        SUM(impressions) as impressions,
-        ROUND(AVG(position), 1) as avg_position
+      SELECT query, SUM(clicks) as clicks, SUM(impressions) as impressions, ROUND(AVG(position), 1) as avg_position
       FROM search_analytics
       WHERE date BETWEEN ? AND ?
         AND query IS NOT NULL
-        AND query NOT IN (
-          SELECT DISTINCT query FROM search_analytics
-          WHERE date BETWEEN ? AND ? AND query IS NOT NULL
+        AND query IN (
+          SELECT query FROM search_analytics WHERE date BETWEEN ? AND ? AND query IS NOT NULL
+          EXCEPT
+          SELECT query FROM search_analytics WHERE date BETWEEN ? AND ? AND query IS NOT NULL
         )
       GROUP BY query
       HAVING clicks > 0
       ORDER BY clicks DESC
       LIMIT 50
-    `, [current.startDate, current.endDate, prior.startDate, prior.endDate]);
+    `, [current.startDate, current.endDate, current.startDate, current.endDate, prior.startDate, prior.endDate]);
 
-    // 8. Lost queries (in prior but not in current)
+    // 8. Lost queries (in prior but not in current) — using EXCEPT for efficiency
     const lostQueries = comparisonDisabled ? [] : db.query(`
-      SELECT query,
-        SUM(clicks) as clicks,
-        SUM(impressions) as impressions,
-        ROUND(AVG(position), 1) as avg_position
+      SELECT query, SUM(clicks) as clicks, SUM(impressions) as impressions, ROUND(AVG(position), 1) as avg_position
       FROM search_analytics
       WHERE date BETWEEN ? AND ?
         AND query IS NOT NULL
-        AND query NOT IN (
-          SELECT DISTINCT query FROM search_analytics
-          WHERE date BETWEEN ? AND ? AND query IS NOT NULL
+        AND query IN (
+          SELECT query FROM search_analytics WHERE date BETWEEN ? AND ? AND query IS NOT NULL
+          EXCEPT
+          SELECT query FROM search_analytics WHERE date BETWEEN ? AND ? AND query IS NOT NULL
         )
       GROUP BY query
       HAVING clicks > 0
       ORDER BY clicks DESC
       LIMIT 50
-    `, [prior.startDate, prior.endDate, current.startDate, current.endDate]);
+    `, [prior.startDate, prior.endDate, prior.startDate, prior.endDate, current.startDate, current.endDate]);
 
     // 9. Branded split (if brandTerms provided)
     let brandedSplit = null;

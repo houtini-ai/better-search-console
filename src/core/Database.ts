@@ -8,6 +8,9 @@ export class Database {
   constructor(dbPath: string) {
     this.db = new BetterSqlite3(dbPath);
     this.db.pragma('journal_mode = WAL');
+    this.db.pragma('cache_size = -65536');    // 64MB cache (default is ~2MB)
+    this.db.pragma('temp_store = MEMORY');     // temp tables in RAM
+    this.db.pragma('mmap_size = 4294967296');  // 4GB mmap for large DBs
     this.initializeTables();
   }
 
@@ -40,14 +43,38 @@ export class Database {
     `);
 
     this.db.exec(`
+      -- Primary uniqueness constraint (also serves as composite index for date-first lookups)
       CREATE UNIQUE INDEX IF NOT EXISTS idx_sa_unique
         ON search_analytics(date, query, page, device, country);
+
+      -- Single-column indexes for standalone filtering
       CREATE INDEX IF NOT EXISTS idx_sa_date ON search_analytics(date);
       CREATE INDEX IF NOT EXISTS idx_sa_query ON search_analytics(query);
       CREATE INDEX IF NOT EXISTS idx_sa_page ON search_analytics(page);
       CREATE INDEX IF NOT EXISTS idx_sa_clicks ON search_analytics(clicks DESC);
       CREATE INDEX IF NOT EXISTS idx_sa_impressions ON search_analytics(impressions DESC);
+
+      -- Composite indexes for dashboard query patterns
+      CREATE INDEX IF NOT EXISTS idx_sa_date_query ON search_analytics(date, query, clicks, impressions, position);
+      CREATE INDEX IF NOT EXISTS idx_sa_date_page ON search_analytics(date, page, clicks, impressions, position);
+      CREATE INDEX IF NOT EXISTS idx_sa_date_country ON search_analytics(date, country, clicks, impressions);
+      CREATE INDEX IF NOT EXISTS idx_sa_query_date ON search_analytics(query, date);
+
+      -- Covering index for summary aggregations
+      CREATE INDEX IF NOT EXISTS idx_sa_date_metrics ON search_analytics(date, clicks, impressions, ctr, position);
     `);
+
+    // Update query planner statistics only when needed
+    // sqlite_stat1 may not exist if ANALYZE has never run, so check safely
+    const statExists = this.db.prepare(
+      `SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'sqlite_stat1' LIMIT 1`
+    ).get();
+    const hasStats = statExists && this.db.prepare(
+      `SELECT 1 FROM sqlite_stat1 WHERE tbl = 'search_analytics' AND idx = 'idx_sa_date_metrics' LIMIT 1`
+    ).get();
+    if (!hasStats) {
+      this.db.exec('ANALYZE;');
+    }
 
     this.db.exec(`
       CREATE TABLE IF NOT EXISTS sync_log (

@@ -490,14 +490,15 @@ const insightHandlers: Record<string, InsightHandler> = {
       FROM search_analytics
       WHERE date BETWEEN ? AND ?
         AND query IS NOT NULL${f}
-        AND query NOT IN (
-          SELECT DISTINCT query FROM search_analytics
-          WHERE date BETWEEN ? AND ? AND query IS NOT NULL
+        AND query IN (
+          SELECT query FROM search_analytics WHERE date BETWEEN ? AND ? AND query IS NOT NULL
+          EXCEPT
+          SELECT query FROM search_analytics WHERE date BETWEEN ? AND ? AND query IS NOT NULL
         )
       GROUP BY query
       ORDER BY impressions DESC
       LIMIT ?
-    `, [current.startDate, current.endDate, ...fv, prior.startDate, prior.endDate, limit]);
+    `, [current.startDate, current.endDate, ...fv, current.startDate, current.endDate, prior.startDate, prior.endDate, limit]);
 
     return { insight: 'new_queries', dateRange: { current, prior }, rows };
   },
@@ -515,14 +516,15 @@ const insightHandlers: Record<string, InsightHandler> = {
       FROM search_analytics
       WHERE date BETWEEN ? AND ?
         AND query IS NOT NULL${f}
-        AND query NOT IN (
-          SELECT DISTINCT query FROM search_analytics
-          WHERE date BETWEEN ? AND ? AND query IS NOT NULL
+        AND query IN (
+          SELECT query FROM search_analytics WHERE date BETWEEN ? AND ? AND query IS NOT NULL
+          EXCEPT
+          SELECT query FROM search_analytics WHERE date BETWEEN ? AND ? AND query IS NOT NULL
         )
       GROUP BY query
       ORDER BY clicks DESC
       LIMIT ?
-    `, [prior.startDate, prior.endDate, ...fv, current.startDate, current.endDate, limit]);
+    `, [prior.startDate, prior.endDate, ...fv, prior.startDate, prior.endDate, current.startDate, current.endDate, limit]);
 
     return { insight: 'lost_queries', dateRange: { current, prior }, rows };
   },

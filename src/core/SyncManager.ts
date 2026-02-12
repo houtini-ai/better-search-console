@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { GscClient } from './GscClient.js';
 import { Database } from './Database.js';
+import { DataRetention } from './DataRetention.js';
 import { getDbPath, defaultStartDate, defaultEndDate } from '../tools/helpers.js';
 import type { SearchAnalyticsRow } from '../types/index.js';
 
@@ -20,6 +21,11 @@ export interface SyncJobResult {
   rowsInserted: number;
   durationMs: number;
   error?: string;
+  pruned?: {
+    rowsDeleted: number;
+    rowsAfter: number;
+    spaceSavedMB: number;
+  };
 }
 
 export interface SyncStatus {
@@ -243,6 +249,7 @@ export class SyncManager {
     let startDate = prop.startDate;
     const dbPath = getDbPath(siteUrl);
     const db = new Database(dbPath);
+    let dbClosed = false;
 
     try {
       // Incremental sync: resume from last synced date if no explicit start
@@ -350,18 +357,39 @@ export class SyncManager {
           db.updateLastSynced(siteUrl);
         }
 
-        return {
+        const result: SyncJobResult = {
           siteUrl,
           status: job.cancelled ? 'cancelled' : 'completed',
           rowsFetched: propRowsFetched,
           rowsInserted: propRowsInserted,
           durationMs: Date.now() - propStartTime,
         };
+
+        // Auto-prune after successful sync (not on cancel)
+        if (!job.cancelled && propRowsInserted > 0) {
+          try {
+            // Close DB before pruning (DataRetention opens its own connection)
+            db.close();
+            dbClosed = true;
+            const pruneResult = DataRetention.prune(siteUrl);
+            if (pruneResult.rowsDeleted > 0) {
+              result.pruned = {
+                rowsDeleted: pruneResult.rowsDeleted,
+                rowsAfter: pruneResult.rowsAfter,
+                spaceSavedMB: Math.round((pruneResult.dbSizeBefore - pruneResult.dbSizeAfter) / 1024 / 1024),
+              };
+            }
+          } catch (pruneErr) {
+            console.error(`[Retention] Auto-prune failed for ${siteUrl}: ${pruneErr}`);
+          }
+        }
+
+        return result;
       } finally {
         clearInterval(checkCancel);
       }
     } finally {
-      db.close();
+      if (!dbClosed) db.close();
     }
   }
 

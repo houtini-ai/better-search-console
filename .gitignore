@@ -23,6 +23,7 @@ Thumbs.db
 # Development artefacts
 *.b64
 *.base64.txt
+nul
 
 # Claude Code local settings
 .claude/
