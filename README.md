@@ -1,9 +1,11 @@
 # Better Search Console
 
 [![npm version](https://img.shields.io/npm/v/@houtini/better-search-console.svg?style=flat-square)](https://www.npmjs.com/package/@houtini/better-search-console)
+[![Known Vulnerabilities](https://snyk.io/test/github/houtini-ai/better-search-console/badge.svg)](https://snyk.io/test/github/houtini-ai/better-search-console)
 [![MCP Registry](https://img.shields.io/badge/MCP-Registry-blue?style=flat-square)](https://registry.modelcontextprotocol.io)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg?style=flat-square)](https://opensource.org/licenses/Apache-2.0)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.3-blue?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
+[![MCP](https://img.shields.io/badge/MCP-Compatible-green?style=flat-square)](https://modelcontextprotocol.io)
 
 ![Better Search Console](better-search-console.jpg)
 
