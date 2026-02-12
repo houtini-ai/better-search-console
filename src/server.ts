@@ -8,6 +8,7 @@ import {
 import { z } from 'zod';
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import { GscClient } from './core/GscClient.js';
 import { SyncManager } from './core/SyncManager.js';
@@ -22,6 +23,9 @@ import { asciiSparkline, formatCompact, formatChange } from './tools/helpers.js'
 
 const SERVER_NAME = 'better-search-console';
 const SERVER_VERSION = '0.3.0';
+
+// ES-module __dirname equivalent — handles spaces and special chars in paths
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export function createServer(): { server: McpServer; run: () => Promise<void> } {
   const credentialsPath = process.env.GOOGLE_APPLICATION_CREDENTIALS;
@@ -522,10 +526,7 @@ export function createServer(): { server: McpServer; run: () => Promise<void> } 
     dashboardResourceUri,
     {},
     async () => {
-      const htmlPath = path.join(
-        path.dirname(new URL(import.meta.url).pathname).replace(/^\/([A-Z]:)/, '$1'),
-        'src', 'ui', 'dashboard.html'
-      );
+      const htmlPath = path.join(__dirname, 'src', 'ui', 'dashboard.html');
       const html = await fs.readFile(htmlPath, 'utf-8');
       return {
         contents: [{
@@ -544,10 +545,7 @@ export function createServer(): { server: McpServer; run: () => Promise<void> } 
     overviewResourceUri,
     {},
     async () => {
-      const htmlPath = path.join(
-        path.dirname(new URL(import.meta.url).pathname).replace(/^\/([A-Z]:)/, '$1'),
-        'overview', 'src', 'ui', 'overview.html'
-      );
+      const htmlPath = path.join(__dirname, 'overview', 'src', 'ui', 'overview.html');
       const html = await fs.readFile(htmlPath, 'utf-8');
       return {
         contents: [{
@@ -566,10 +564,7 @@ export function createServer(): { server: McpServer; run: () => Promise<void> } 
     syncResourceUri,
     {},
     async () => {
-      const htmlPath = path.join(
-        path.dirname(new URL(import.meta.url).pathname).replace(/^\/([A-Z]:)/, '$1'),
-        'sync-progress', 'src', 'ui', 'sync-progress.html'
-      );
+      const htmlPath = path.join(__dirname, 'sync-progress', 'src', 'ui', 'sync-progress.html');
       const html = await fs.readFile(htmlPath, 'utf-8');
       return {
         contents: [{
