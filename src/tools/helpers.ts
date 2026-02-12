@@ -148,8 +148,13 @@ export function getPeriodDates(
     case 'year_over_year': {
       const s = new Date(current.startDate);
       const e = new Date(current.endDate);
+      const sDay = s.getDate();
+      const eDay = e.getDate();
       s.setFullYear(s.getFullYear() - 1);
+      // Handle leap year: Feb 29 → Feb 28 (setFullYear may roll to Mar 1)
+      if (s.getDate() !== sDay) s.setDate(0); // last day of previous month
       e.setFullYear(e.getFullYear() - 1);
+      if (e.getDate() !== eDay) e.setDate(0);
       priorStart = s;
       priorEnd = e;
       break;
@@ -157,8 +162,13 @@ export function getPeriodDates(
     case 'previous_month': {
       const s = new Date(current.startDate);
       const e = new Date(current.endDate);
+      const sMonth = (s.getMonth() - 1 + 12) % 12;
+      const eMonth = (e.getMonth() - 1 + 12) % 12;
       s.setMonth(s.getMonth() - 1);
+      // Handle day overflow: e.g. Mar 31 → setMonth(-1) → "Feb 31" → Mar 3
+      if (s.getMonth() !== sMonth) s.setDate(0); // last day of intended month
       e.setMonth(e.getMonth() - 1);
+      if (e.getMonth() !== eMonth) e.setDate(0);
       priorStart = s;
       priorEnd = e;
       break;
@@ -181,6 +191,14 @@ export function getPeriodDates(
     if (diff < -3) diff += 7;
     priorStart = new Date(priorStart.getTime() + diff * DAY);
     priorEnd = new Date(priorEnd.getTime() + diff * DAY);
+
+    // Safety: ensure prior period never overlaps with current period
+    const currentStartMs = new Date(current.startDate).getTime();
+    if (priorEnd.getTime() >= currentStartMs) {
+      const overshoot = priorEnd.getTime() - currentStartMs + DAY;
+      priorStart = new Date(priorStart.getTime() - overshoot);
+      priorEnd = new Date(priorEnd.getTime() - overshoot);
+    }
   }
 
   return {

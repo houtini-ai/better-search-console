@@ -8,7 +8,8 @@ export class Database {
   constructor(dbPath: string) {
     this.db = new BetterSqlite3(dbPath);
     this.db.pragma('journal_mode = WAL');
-    this.db.pragma('cache_size = -65536');    // 64MB cache (default is ~2MB)
+    this.db.pragma('busy_timeout = 5000');     // wait up to 5s for concurrent writers
+    this.db.pragma('cache_size = -65536');     // 64MB cache (default is ~2MB)
     this.db.pragma('temp_store = MEMORY');     // temp tables in RAM
     this.db.pragma('mmap_size = 4294967296');  // 4GB mmap for large DBs
     this.initializeTables();
@@ -216,12 +217,15 @@ export class Database {
 
   // --- Raw Query (read-only) ---
 
-  executeReadOnlyQuery(sql: string, params: any[] = []): any[] {
-    const forbidden = /\b(INSERT|UPDATE|DELETE|DROP|ALTER|CREATE|REPLACE|ATTACH|DETACH|REINDEX|VACUUM)\b/i;
+  executeReadOnlyQuery(sql: string, params: any[] = [], maxRows: number = 10000): any[] {
+    const forbidden = /\b(INSERT|UPDATE|DELETE|DROP|ALTER|CREATE|REPLACE|ATTACH|DETACH|REINDEX|VACUUM|PRAGMA)\b/i;
     if (forbidden.test(sql)) {
-      throw new Error('Only SELECT queries are allowed. Write operations are blocked.');
+      throw new Error('Only SELECT queries are allowed. Write operations and PRAGMA are blocked.');
     }
-    return this.db.prepare(sql).all(...params);
+    // Enforce a result size limit to prevent memory exhaustion
+    const hasLimit = /\bLIMIT\b/i.test(sql);
+    const safeSql = hasLimit ? sql : `${sql} LIMIT ${maxRows}`;
+    return this.db.prepare(safeSql).all(...params);
   }
 
   // --- Generic query helper for insights ---

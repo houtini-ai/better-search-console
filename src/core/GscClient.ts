@@ -3,6 +3,24 @@ import type { GscProperty, GscApiRow, FetchOptions } from '../types/index.js';
 
 const ROW_LIMIT = 25000; // GSC API max per request
 const DEFAULT_DIMENSIONS = ['query', 'page', 'date', 'device', 'country'];
+const MAX_RETRIES = 3;
+const RETRYABLE_STATUS_CODES = [429, 500, 502, 503];
+
+async function withRetry<T>(fn: () => Promise<T>, retries = MAX_RETRIES): Promise<T> {
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      return await fn();
+    } catch (err: any) {
+      const status = err?.code || err?.response?.status || err?.status;
+      const isRetryable = RETRYABLE_STATUS_CODES.includes(Number(status));
+      if (!isRetryable || attempt === retries) throw err;
+      const delay = Math.min(1000 * Math.pow(2, attempt), 30000);
+      console.error(`[GSC] Retryable error (${status}), attempt ${attempt + 1}/${retries}, waiting ${delay}ms...`);
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+  throw new Error('Unreachable');
+}
 
 export interface PageResult {
   rows: GscApiRow[];
@@ -23,7 +41,7 @@ export class GscClient {
   }
 
   async listProperties(): Promise<GscProperty[]> {
-    const response = await this.searchconsole.sites.list();
+    const response: any = await withRetry(() => this.searchconsole.sites.list());
     const sites = response.data.siteEntry || [];
     return sites.map((site: any) => ({
       siteUrl: site.siteUrl,
@@ -56,7 +74,7 @@ export class GscClient {
         break;
       }
 
-      const response = await this.searchconsole.searchanalytics.query({
+      const response: any = await withRetry(() => this.searchconsole.searchanalytics.query({
         siteUrl,
         requestBody: {
           startDate: options.startDate,
@@ -67,7 +85,7 @@ export class GscClient {
           dataState: options.dataState || 'all',
           ...(options.searchType ? { type: options.searchType } : {}),
         },
-      });
+      }));
 
       const rows: GscApiRow[] = (response.data.rows || []).map((row: any) => ({
         keys: row.keys,

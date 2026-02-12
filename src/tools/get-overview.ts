@@ -18,7 +18,7 @@ interface PropertyOverview {
     clicks: number;
     impressions: number;
     ctr: number;
-    avgPosition: number;
+    avgPosition: number | null;
   };
   changes: {
     clicksPct: number | null;
@@ -116,13 +116,15 @@ export async function getOverviewData(
           clicks: currentSummary.clicks,
           impressions: currentSummary.impressions,
           ctr: currentSummary.ctr ?? 0,
-          avgPosition: currentSummary.avg_position ?? 0,
+          avgPosition: currentSummary.avg_position ?? null,
         },
         changes: {
           clicksPct: pctChange(currentSummary.clicks, priorSummary.clicks),
           impressionsPct: pctChange(currentSummary.impressions, priorSummary.impressions),
           ctrPct: pctChange(currentSummary.ctr ?? 0, priorSummary.ctr ?? 0),
-          avgPositionPct: pctChange(currentSummary.avg_position ?? 0, priorSummary.avg_position ?? 0),
+          avgPositionPct: (currentSummary.avg_position != null && priorSummary.avg_position != null)
+            ? pctChange(currentSummary.avg_position, priorSummary.avg_position)
+            : null,
         },
         sparkline,
       });
@@ -143,7 +145,7 @@ export async function getOverviewData(
       properties.sort((a, b) => b.current.ctr - a.current.ctr);
       break;
     case 'position':
-      properties.sort((a, b) => a.current.avgPosition - b.current.avgPosition); // lower is better
+      properties.sort((a, b) => (a.current.avgPosition ?? 999) - (b.current.avgPosition ?? 999)); // lower is better, null sorts last
       break;
     case 'alpha':
     default:

@@ -26,8 +26,7 @@ const SERVER_VERSION = '0.3.0';
 export function createServer(): { server: McpServer; run: () => Promise<void> } {
   const credentialsPath = process.env.GOOGLE_APPLICATION_CREDENTIALS;
   if (!credentialsPath) {
-    console.error('[BSC] ERROR: GOOGLE_APPLICATION_CREDENTIALS env var not set');
-    process.exit(1);
+    throw new Error('GOOGLE_APPLICATION_CREDENTIALS environment variable is not set. See README for setup instructions.');
   }
 
   const gscClient = new GscClient(credentialsPath);
@@ -80,9 +79,16 @@ export function createServer(): { server: McpServer; run: () => Promise<void> } 
         // Step 2: Start syncing all properties
         const jobId = await syncManager.startSyncAll({});
 
-        // Step 3: Wait for sync to complete (poll every 2s)
+        // Step 3: Wait for sync to complete (poll every 2s, timeout after 10 min)
+        const SETUP_TIMEOUT_MS = 10 * 60 * 1000;
+        const setupStart = Date.now();
         let status = syncManager.getStatus(jobId) as any;
         while (status.status === 'queued' || status.status === 'syncing') {
+          if (Date.now() - setupStart > SETUP_TIMEOUT_MS) {
+            console.error('[BSC] Setup sync timed out after 10 minutes');
+            syncManager.cancelJob(jobId);
+            break;
+          }
           await new Promise(resolve => setTimeout(resolve, 2000));
           status = syncManager.getStatus(jobId) as any;
         }
@@ -104,7 +110,7 @@ export function createServer(): { server: McpServer; run: () => Promise<void> } 
           const spark = asciiSparkline(p.sparkline.map((s: any) => s.clicks));
           lines.push(
             `${p.domain}`,
-            `  Clicks: ${formatCompact(p.current.clicks)} (${formatChange(p.changes.clicksPct)})  |  Impressions: ${formatCompact(p.current.impressions)} (${formatChange(p.changes.impressionsPct)})  |  CTR: ${(p.current.ctr * 100).toFixed(1)}%  |  Pos: ${p.current.avgPosition.toFixed(1)}`,
+            `  Clicks: ${formatCompact(p.current.clicks)} (${formatChange(p.changes.clicksPct)})  |  Impressions: ${formatCompact(p.current.impressions)} (${formatChange(p.changes.impressionsPct)})  |  CTR: ${(p.current.ctr * 100).toFixed(1)}%  |  Pos: ${p.current.avgPosition != null ? p.current.avgPosition.toFixed(1) : 'n/a'}`,
             `  Trend: ${spark}`,
             '',
           );
@@ -174,7 +180,7 @@ export function createServer(): { server: McpServer; run: () => Promise<void> } 
           const spark = asciiSparkline(p.sparkline.map((s: any) => s.clicks));
           lines.push(
             `${p.domain}`,
-            `  Clicks: ${formatCompact(p.current.clicks)} (${formatChange(p.changes.clicksPct)})  |  Impressions: ${formatCompact(p.current.impressions)} (${formatChange(p.changes.impressionsPct)})  |  CTR: ${(p.current.ctr * 100).toFixed(1)}%  |  Pos: ${p.current.avgPosition.toFixed(1)}`,
+            `  Clicks: ${formatCompact(p.current.clicks)} (${formatChange(p.changes.clicksPct)})  |  Impressions: ${formatCompact(p.current.impressions)} (${formatChange(p.changes.impressionsPct)})  |  CTR: ${(p.current.ctr * 100).toFixed(1)}%  |  Pos: ${p.current.avgPosition != null ? p.current.avgPosition.toFixed(1) : 'n/a'}`,
             `  Trend: ${spark}`,
             `  siteUrl: ${p.siteUrl}`,
             '',

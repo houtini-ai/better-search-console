@@ -9,6 +9,10 @@ run().catch((error) => {
   process.exit(1);
 });
 
-process.on('SIGINT', () => {
+function shutdown() {
+  console.error('[BSC] Shutting down gracefully...');
   process.exit(0);
-});
+}
+
+process.on('SIGINT', shutdown);
+process.on('SIGTERM', shutdown);
