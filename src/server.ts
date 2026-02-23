@@ -22,7 +22,7 @@ import { getOverviewData } from './tools/get-overview.js';
 import { asciiSparkline, formatCompact, formatChange } from './tools/helpers.js';
 
 const SERVER_NAME = 'better-search-console';
-const SERVER_VERSION = '1.0.2';
+const SERVER_VERSION = '1.0.3';
 
 // ES-module __dirname equivalent — handles spaces and special chars in paths
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
