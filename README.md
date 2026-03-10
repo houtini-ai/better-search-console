@@ -9,6 +9,12 @@
 
 ![Better Search Console](better-search-console.jpg)
 
+<p align="center">
+  <a href="https://glama.ai/mcp/servers/@houtini-ai/better-search-console">
+    <img width="380" height="200" src="https://glama.ai/mcp/servers/@houtini-ai/better-search-console/badge" alt="Better Search Console MCP server" />
+  </a>
+</p>
+
 ## Why This Exists
 
 Every SEO tool that connects to an LLM has the same problem: the Google Search Console API returns 1,000 rows per request, your context window fills up fast, and you end up asking the model to reason about a tiny fraction of your data. The answers sound plausible but they're built on incomplete information.
