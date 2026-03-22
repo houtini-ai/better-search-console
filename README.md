@@ -15,6 +15,10 @@
   </a>
 </p>
 
+> **Quick Navigation**
+>
+> [Why this exists](#why-this-exists) | [Quick start](#quick-start) | [Tools](#tools) | [Insight types](#insight-types) | [Data retention](#data-retention) | [Custom SQL](#custom-sql) | [Development](#development) | [Troubleshooting](#troubleshooting)
+
 ## Why This Exists
 
 Every SEO tool that connects to an LLM has the same problem: the Google Search Console API returns 1,000 rows per request, your context window fills up fast, and you end up asking the model to reason about a tiny fraction of your data. The answers sound plausible but they're built on incomplete information.
@@ -82,6 +86,25 @@ Add this to your Claude Desktop config file:
 ```
 
 Replace `/path/to/your-service-account.json` with the actual path to the JSON key file you downloaded in Step 1.
+
+### Claude Code (CLI)
+
+Claude Code uses a different registration mechanism -- it doesn't read `claude_desktop_config.json`. Use `claude mcp add` instead:
+
+```bash
+claude mcp add \
+  -e GOOGLE_APPLICATION_CREDENTIALS=/path/to/your-service-account.json \
+  -s user \
+  better-search-console -- npx -y @houtini/better-search-console
+```
+
+Verify with:
+
+```bash
+claude mcp get better-search-console
+```
+
+You should see `Status: Connected`.
 
 ### Step 3: Restart Claude Desktop and go
 
