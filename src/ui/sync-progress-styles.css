@@ -1,16 +1,39 @@
+/* Better Search Console — Sync Progress Theme */
+/* Light-first, system-aware dark mode */
+
 :root {
-  --bg: #0f1117;
-  --surface: #1a1d27;
-  --border: #2a2d3a;
-  --text: #e4e4e7;
-  --text-secondary: #9ca3af;
-  --accent: #3b82f6;
-  --accent-glow: rgba(59, 130, 246, 0.15);
-  --success: #22c55e;
-  --error: #ef4444;
-  --warning: #f59e0b;
+  --bg: #f8f9fb;
+  --surface: #ffffff;
+  --border: #e2e5e9;
+  --border-subtle: #eef0f3;
+  --shadow-card: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --text: #1a1d23;
+  --text-secondary: #5f6672;
+  --accent: #0891b2;
+  --accent-glow: rgba(8,145,178,0.12);
+  --success: #16a34a;
+  --error: #dc2626;
+  --warning: #d97706;
   --skipped: #6b7280;
   --radius: 8px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #13151a;
+    --surface: #1c1f26;
+    --border: #2d3139;
+    --border-subtle: #252830;
+    --shadow-card: 0 1px 3px rgba(0,0,0,0.3);
+    --text: #e8eaed;
+    --text-secondary: #9aa0a6;
+    --accent: #22d3ee;
+    --accent-glow: rgba(34,211,238,0.15);
+    --success: #4ade80;
+    --error: #f87171;
+    --warning: #f59e0b;
+    --skipped: #6b7280;
+  }
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -22,6 +45,7 @@ body {
   font-size: 14px;
   line-height: 1.5;
   padding: 20px;
+  transition: background 0.2s, color 0.2s;
 }
 
 .sync-container {
@@ -39,6 +63,7 @@ body {
 .header h1 {
   font-size: 18px;
   font-weight: 600;
+  letter-spacing: -0.01em;
 }
 
 .job-id {
@@ -66,9 +91,9 @@ body {
 
 .status-badge.queued { background: var(--accent-glow); color: var(--accent); }
 .status-badge.syncing { background: var(--accent-glow); color: var(--accent); }
-.status-badge.completed { background: rgba(34, 197, 94, 0.15); color: var(--success); }
-.status-badge.failed { background: rgba(239, 68, 68, 0.15); color: var(--error); }
-.status-badge.cancelled { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
+.status-badge.completed { background: rgba(22, 163, 74, 0.1); color: var(--success); }
+.status-badge.failed { background: rgba(220, 38, 38, 0.1); color: var(--error); }
+.status-badge.cancelled { background: rgba(217, 119, 6, 0.1); color: var(--warning); }
 
 .elapsed {
   font-size: 12px;
@@ -85,7 +110,7 @@ body {
 
 .progress-track {
   height: 8px;
-  background: var(--surface);
+  background: var(--border-subtle);
   border-radius: 4px;
   overflow: hidden;
   border: 1px solid var(--border);
@@ -145,10 +170,12 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 6px 10px;
+  padding: 8px 12px;
   border-radius: var(--radius);
   background: var(--surface);
+  border: 1px solid var(--border-subtle);
   font-size: 13px;
+  box-shadow: var(--shadow-card);
 }
 
 .result-row .domain {
@@ -182,19 +209,20 @@ body {
 }
 
 .btn-cancel {
-  background: rgba(239, 68, 68, 0.15);
+  background: none;
   color: var(--error);
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  border: 1px solid var(--border);
   padding: 8px 16px;
   border-radius: var(--radius);
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: all 0.15s;
 }
 
 .btn-cancel:hover {
-  background: rgba(239, 68, 68, 0.25);
+  border-color: var(--error);
+  background: rgba(220, 38, 38, 0.08);
 }
 
 .btn-cancel:disabled {

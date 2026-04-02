@@ -64,6 +64,14 @@ let modalRows: any[] = [];
 let modalNameField = '';
 let modalFilter = 'all';
 
+// Search filter state
+let searchFilterValue = '';
+
+// --- Theme-aware helpers ---
+function getCSSVar(name: string): string {
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+}
+
 // --- App Setup ---
 const app = new App({ name: 'Better Search Console', version: '1.0.0' });
 
@@ -85,14 +93,22 @@ function renderDashboard(data: DashboardData) {
   document.getElementById('loading')!.style.display = 'none';
   document.getElementById('content')!.style.display = 'block';
 
-  // Header
-  document.getElementById('site-url')!.textContent = data.siteUrl;
+  // Header — extract domain for display and logo
+  const domain = data.siteUrl.replace(/^sc-domain:/, '').replace(/^https?:\/\//, '').replace(/\/$/, '');
+  document.getElementById('site-url')!.textContent = domain;
   setActiveDateRange(data.dateRange);
+
+  // Site logo via logo.dev
+  const logoEl = document.getElementById('site-logo') as HTMLImageElement;
+  logoEl.src = `https://img.logo.dev/${domain}?token=pk_DkUq1s2HT-q1JYXa2MuOaw&size=64&format=png`;
+  logoEl.alt = domain;
+  logoEl.style.display = 'block';
+  logoEl.onerror = () => { logoEl.style.display = 'none'; };
 
   // Sync info
   if (data.lastSyncedAt) {
     const syncEl = document.getElementById('sync-info')!;
-    syncEl.style.display = 'block';
+    syncEl.style.display = 'inline-flex';
     document.getElementById('last-sync-date')!.textContent = formatDate(data.lastSyncedAt);
   }
 
@@ -102,9 +118,11 @@ function renderDashboard(data: DashboardData) {
   // Chart
   renderChart(data.dailyTrend, data.priorDailyTrend);
 
-  // Tables (inline shows max 10 rows)
-  renderTable('queries-body', data.topQueries.slice(0, 10), 'query');
-  renderTable('pages-body', data.topPages.slice(0, 10), 'page');
+  // Tables (inline shows max 10 rows) — apply search filter
+  const filteredQueries = applySearchFilter(data.topQueries, 'query');
+  const filteredPages = applySearchFilter(data.topPages, 'page');
+  renderTable('queries-body', filteredQueries.slice(0, 10), 'query');
+  renderTable('pages-body', filteredPages.slice(0, 10), 'page');
 
   // Below-the-fold sections
   renderCountries(data);
@@ -141,10 +159,19 @@ function renderChart(trend: TrendRow[], priorTrend?: TrendRow[]) {
   });
 
   const datasets: any[] = [];
+  const gridColor = getCSSVar('--chart-grid') || 'rgba(0,0,0,0.06)';
+  const tickColor = getCSSVar('--text-muted') || '#6b7280';
+  const cyanColor = getCSSVar('--cyan') || '#0891b2';
+  const purpleColor = getCSSVar('--purple') || '#7c3aed';
+  const orangeColor = getCSSVar('--orange') || '#ea580c';
+  const amberColor = getCSSVar('--amber') || '#d97706';
+  const cyanFill = getCSSVar('--chart-cyan-fill') || 'rgba(8,145,178,0.06)';
+  const purpleFill = getCSSVar('--chart-purple-fill') || 'rgba(124,58,237,0.04)';
+
   const scales: any = {
     x: {
-      grid: { color: 'rgba(45,49,57,0.5)' },
-      ticks: { color: '#6b7280', font: { size: 11 }, maxTicksLimit: 12 },
+      grid: { color: gridColor },
+      ticks: { color: tickColor, font: { size: 11 }, maxTicksLimit: 12 },
     },
   };
 
@@ -152,8 +179,8 @@ function renderChart(trend: TrendRow[], priorTrend?: TrendRow[]) {
     datasets.push({
       label: 'Clicks',
       data: trend.map(r => r.clicks),
-      borderColor: '#22d3ee',
-      backgroundColor: 'rgba(34,211,238,0.08)',
+      borderColor: cyanColor,
+      backgroundColor: cyanFill,
       fill: true,
       tension: 0.3,
       pointRadius: 0,
@@ -163,8 +190,8 @@ function renderChart(trend: TrendRow[], priorTrend?: TrendRow[]) {
     });
     scales.y = {
       position: 'left',
-      grid: { color: 'rgba(45,49,57,0.5)' },
-      ticks: { color: '#22d3ee', font: { size: 11 }, callback: (v: number) => formatCompact(v) },
+      grid: { color: gridColor },
+      ticks: { color: cyanColor, font: { size: 11 }, callback: (v: number) => formatCompact(v) },
     };
   }
 
@@ -172,8 +199,8 @@ function renderChart(trend: TrendRow[], priorTrend?: TrendRow[]) {
     datasets.push({
       label: 'Impressions',
       data: trend.map(r => r.impressions),
-      borderColor: '#a78bfa',
-      backgroundColor: 'rgba(167,139,250,0.05)',
+      borderColor: purpleColor,
+      backgroundColor: purpleFill,
       fill: true,
       tension: 0.3,
       pointRadius: 0,
@@ -184,7 +211,7 @@ function renderChart(trend: TrendRow[], priorTrend?: TrendRow[]) {
     scales.y1 = {
       position: 'right',
       grid: { drawOnChartArea: false },
-      ticks: { color: '#a78bfa', font: { size: 11 }, callback: (v: number) => formatCompact(v) },
+      ticks: { color: purpleColor, font: { size: 11 }, callback: (v: number) => formatCompact(v) },
     };
   }
 
@@ -192,7 +219,7 @@ function renderChart(trend: TrendRow[], priorTrend?: TrendRow[]) {
     datasets.push({
       label: 'CTR',
       data: trend.map(r => ((r.ctr ?? 0) * 100)),
-      borderColor: '#fb923c',
+      borderColor: orangeColor,
       fill: false,
       tension: 0.3,
       pointRadius: 0,
@@ -205,7 +232,7 @@ function renderChart(trend: TrendRow[], priorTrend?: TrendRow[]) {
       display: true,
       grid: { drawOnChartArea: false },
       ticks: {
-        color: '#fb923c',
+        color: orangeColor,
         font: { size: 11 },
         callback: (v: number) => v.toFixed(1) + '%',
       },
@@ -216,7 +243,7 @@ function renderChart(trend: TrendRow[], priorTrend?: TrendRow[]) {
     datasets.push({
       label: 'Position',
       data: trend.map(r => r.avg_position),
-      borderColor: '#f59e0b',
+      borderColor: amberColor,
       borderDash: [5, 3],
       fill: false,
       tension: 0.3,
@@ -230,7 +257,7 @@ function renderChart(trend: TrendRow[], priorTrend?: TrendRow[]) {
       display: true,
       reverse: true,
       grid: { drawOnChartArea: false },
-      ticks: { color: '#f59e0b', font: { size: 11 } },
+      ticks: { color: amberColor, font: { size: 11 } },
     };
   }
 
@@ -240,7 +267,7 @@ function renderChart(trend: TrendRow[], priorTrend?: TrendRow[]) {
       datasets.push({
         label: 'Prior Clicks',
         data: priorTrend.map(r => r.clicks),
-        borderColor: 'rgba(34,211,238,0.35)',
+        borderColor: cyanColor + '59', // 35% opacity
         borderDash: [6, 4],
         fill: false,
         tension: 0.3,
@@ -254,7 +281,7 @@ function renderChart(trend: TrendRow[], priorTrend?: TrendRow[]) {
       datasets.push({
         label: 'Prior Impressions',
         data: priorTrend.map(r => r.impressions),
-        borderColor: 'rgba(167,139,250,0.35)',
+        borderColor: purpleColor + '59',
         borderDash: [6, 4],
         fill: false,
         tension: 0.3,
@@ -268,7 +295,7 @@ function renderChart(trend: TrendRow[], priorTrend?: TrendRow[]) {
       datasets.push({
         label: 'Prior CTR',
         data: priorTrend.map(r => ((r.ctr ?? 0) * 100)),
-        borderColor: 'rgba(251,146,60,0.35)',
+        borderColor: orangeColor + '59',
         borderDash: [6, 4],
         fill: false,
         tension: 0.3,
@@ -282,7 +309,7 @@ function renderChart(trend: TrendRow[], priorTrend?: TrendRow[]) {
       datasets.push({
         label: 'Prior Position',
         data: priorTrend.map(r => r.avg_position),
-        borderColor: 'rgba(245,158,11,0.35)',
+        borderColor: amberColor + '59',
         borderDash: [6, 4],
         fill: false,
         tension: 0.3,
@@ -311,14 +338,14 @@ function renderChart(trend: TrendRow[], priorTrend?: TrendRow[]) {
           display: true,
           position: 'top',
           align: 'end',
-          labels: { color: '#9aa0a6', boxWidth: 12, padding: 16, font: { size: 12 } },
+          labels: { color: getCSSVar('--text-secondary') || '#5f6672', boxWidth: 12, padding: 16, font: { size: 12 } },
         },
         tooltip: {
-          backgroundColor: '#1c1f26',
-          borderColor: '#2d3139',
+          backgroundColor: getCSSVar('--chart-tooltip-bg') || '#ffffff',
+          borderColor: getCSSVar('--chart-tooltip-border') || '#e2e5e9',
           borderWidth: 1,
-          titleColor: '#e8eaed',
-          bodyColor: '#9aa0a6',
+          titleColor: getCSSVar('--chart-tooltip-title') || '#1a1d23',
+          bodyColor: getCSSVar('--chart-tooltip-body') || '#5f6672',
           padding: 10,
           cornerRadius: 6,
           callbacks: {
@@ -357,7 +384,8 @@ function renderTable(tbodyId: string, rows: any[], nameField: string, filter = '
     const displayName = nameField === 'page' ? extractPath(name) : name;
     const changePct = row.clicks_change_pct;
     const changeClass = changePct == null ? 'neutral' : changePct > 0 ? 'positive' : changePct < 0 ? 'negative' : 'neutral';
-    const changeText = changePct == null ? '—' : (changePct > 0 ? '+' : '') + changePct + '%';
+    const arrow = changePct == null ? '' : changePct > 0 ? '\u2191 ' : changePct < 0 ? '\u2193 ' : '';
+    const changeText = changePct == null ? '—' : arrow + (changePct > 0 ? '+' : '') + changePct + '%';
 
     return `<tr>
       <td title="${escapeHtml(name)}">${escapeHtml(displayName)}</td>
@@ -778,8 +806,8 @@ function renderBranded(data: DashboardData) {
     data: {
       labels: dates.map(d => new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })),
       datasets: [
-        { label: 'Branded', data: bData, borderColor: '#22d3ee', borderWidth: 1.5, pointRadius: 0, tension: 0.3, fill: false },
-        { label: 'Non-Branded', data: nbData, borderColor: '#a78bfa', borderWidth: 1.5, pointRadius: 0, tension: 0.3, fill: false },
+        { label: 'Branded', data: bData, borderColor: getCSSVar('--cyan') || '#0891b2', borderWidth: 1.5, pointRadius: 0, tension: 0.3, fill: false },
+        { label: 'Non-Branded', data: nbData, borderColor: getCSSVar('--purple') || '#7c3aed', borderWidth: 1.5, pointRadius: 0, tension: 0.3, fill: false },
       ],
     },
     options: {
@@ -787,7 +815,7 @@ function renderBranded(data: DashboardData) {
       maintainAspectRatio: false,
       animation: false,
       plugins: {
-        legend: { display: true, position: 'top', align: 'end', labels: { color: '#9aa0a6', boxWidth: 10, font: { size: 11 } } },
+        legend: { display: true, position: 'top', align: 'end', labels: { color: getCSSVar('--text-secondary') || '#5f6672', boxWidth: 10, font: { size: 11 } } },
         tooltip: { enabled: false },
       },
       scales: {
@@ -833,7 +861,8 @@ function setChange(id: string, pct: number | null, invertSentiment = false) {
     el.className = 'change neutral';
     return;
   }
-  const text = (pct > 0 ? '+' : '') + pct + '% vs prior';
+  const arrow = pct > 0 ? '\u2191' : pct < 0 ? '\u2193' : '';
+  const text = arrow + ' ' + (pct > 0 ? '+' : '') + pct + '% vs prior';
   let cls: string;
   if (invertSentiment) {
     cls = pct < 0 ? 'positive' : pct > 0 ? 'negative' : 'neutral';
@@ -857,3 +886,56 @@ function escapeHtml(str: string): string {
   div.textContent = str;
   return div.innerHTML;
 }
+
+// --- Search Filter ---
+function applySearchFilter(rows: any[], nameField: string): any[] {
+  if (!searchFilterValue) return rows;
+  try {
+    const re = new RegExp(searchFilterValue, 'i');
+    return rows.filter(r => re.test(r[nameField] || ''));
+  } catch {
+    // Invalid regex — fall back to case-insensitive substring match
+    const lower = searchFilterValue.toLowerCase();
+    return rows.filter(r => (r[nameField] || '').toLowerCase().includes(lower));
+  }
+}
+
+const searchInput = document.getElementById('search-input') as HTMLInputElement;
+const searchClear = document.getElementById('search-clear')!;
+const searchFilterEl = document.getElementById('search-filter')!;
+
+searchInput.addEventListener('input', () => {
+  searchFilterValue = searchInput.value;
+  searchFilterEl.classList.toggle('has-value', searchFilterValue.length > 0);
+  if (currentData) {
+    const filteredQueries = applySearchFilter(currentData.topQueries, 'query');
+    const filteredPages = applySearchFilter(currentData.topPages, 'page');
+    renderTable('queries-body', filteredQueries.slice(0, 10), 'query');
+    renderTable('pages-body', filteredPages.slice(0, 10), 'page');
+  }
+});
+
+searchClear.addEventListener('click', () => {
+  searchInput.value = '';
+  searchFilterValue = '';
+  searchFilterEl.classList.remove('has-value');
+  if (currentData) {
+    renderTable('queries-body', currentData.topQueries.slice(0, 10), 'query');
+    renderTable('pages-body', currentData.topPages.slice(0, 10), 'page');
+  }
+});
+
+// Keyboard shortcut: "/" to focus search
+document.addEventListener('keydown', (e) => {
+  if (e.key === '/' && document.activeElement !== searchInput && !(document.activeElement instanceof HTMLInputElement)) {
+    e.preventDefault();
+    searchInput.focus();
+  }
+  if (e.key === 'Escape') {
+    if (document.getElementById('modal')!.style.display !== 'none') {
+      document.getElementById('modal')!.style.display = 'none';
+    } else if (document.activeElement === searchInput) {
+      searchInput.blur();
+    }
+  }
+});

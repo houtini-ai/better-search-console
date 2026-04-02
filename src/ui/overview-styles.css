@@ -1,21 +1,56 @@
-/* Better Search Console — Overview Grid Dark Theme */
+/* Better Search Console — Overview Grid Theme */
+/* Light-first, system-aware dark mode */
+
 :root {
-  --bg-primary: #13151a;
-  --bg-card: #1c1f26;
-  --bg-card-hover: #22262e;
-  --bg-input: #282c34;
-  --border: #2d3139;
-  --text-primary: #e8eaed;
-  --text-secondary: #9aa0a6;
+  --bg-primary: #f8f9fb;
+  --bg-card: #ffffff;
+  --bg-card-hover: #f1f3f5;
+  --bg-input: #eef0f3;
+  --border: #e2e5e9;
+  --border-subtle: #eef0f3;
+  --shadow-card: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-card-hover: 0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04);
+  --text-primary: #1a1d23;
+  --text-secondary: #5f6672;
   --text-muted: #6b7280;
-  --cyan: #22d3ee;
-  --purple: #a78bfa;
-  --orange: #fb923c;
-  --amber: #f59e0b;
-  --green: #4ade80;
-  --red: #f87171;
+  --cyan: #0891b2;
+  --cyan-bg: rgba(8,145,178,0.08);
+  --cyan-bg-strong: rgba(8,145,178,0.15);
+  --purple: #7c3aed;
+  --orange: #ea580c;
+  --amber: #d97706;
+  --green: #16a34a;
+  --red: #dc2626;
+  --chart-cyan-fill: rgba(8,145,178,0.06);
+  --chart-purple-fill: rgba(124,58,237,0.04);
   --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --radius: 8px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-primary: #13151a;
+    --bg-card: #1c1f26;
+    --bg-card-hover: #22262e;
+    --bg-input: #282c34;
+    --border: #2d3139;
+    --border-subtle: #252830;
+    --shadow-card: 0 1px 3px rgba(0,0,0,0.3);
+    --shadow-card-hover: 0 4px 12px rgba(0,0,0,0.4);
+    --text-primary: #e8eaed;
+    --text-secondary: #9aa0a6;
+    --text-muted: #6b7280;
+    --cyan: #22d3ee;
+    --cyan-bg: rgba(34,211,238,0.1);
+    --cyan-bg-strong: rgba(34,211,238,0.18);
+    --purple: #a78bfa;
+    --orange: #fb923c;
+    --amber: #f59e0b;
+    --green: #4ade80;
+    --red: #f87171;
+    --chart-cyan-fill: rgba(34,211,238,0.08);
+    --chart-purple-fill: rgba(167,139,250,0.05);
+  }
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -27,6 +62,7 @@ body {
   font-size: 14px;
   line-height: 1.5;
   min-height: 100vh;
+  transition: background 0.2s, color 0.2s;
 }
 
 .overview { padding: 20px; max-width: 1400px; margin: 0 auto; }
@@ -40,36 +76,27 @@ body {
   flex-wrap: wrap;
   gap: 12px;
 }
-.header h1 { font-size: 18px; font-weight: 600; }
+.header h1 { font-size: 18px; font-weight: 600; letter-spacing: -0.01em; }
 
 /* Logo */
 .logo-link {
   display: inline-flex;
   align-items: center;
   margin-right: 4px;
-  opacity: 0.75;
+  opacity: 0.6;
   transition: opacity 0.2s;
 }
 .logo-link:hover { opacity: 1; }
-.logo {
-  width: 80px;
-  height: auto;
-  border-radius: 4px;
-}
+.logo { width: 72px; height: auto; border-radius: 4px; }
 
 /* Controls row */
-.controls {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  flex-wrap: wrap;
-}
+.controls { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 
 /* Date range selector */
 .date-range {
   display: flex;
   gap: 4px;
-  background: var(--bg-card);
+  background: var(--bg-input);
   border-radius: var(--radius);
   padding: 3px;
 }
@@ -83,9 +110,10 @@ body {
   font-size: 12px;
   font-weight: 500;
   transition: all 0.15s;
+  font-family: var(--font);
 }
-.date-range button:hover { color: var(--text-primary); background: var(--bg-card-hover); }
-.date-range button.active { background: var(--cyan); color: #000; }
+.date-range button:hover { color: var(--text-primary); background: var(--bg-card); }
+.date-range button.active { background: var(--cyan-bg-strong); color: var(--cyan); }
 
 /* Sort selector */
 .sort-select {
@@ -98,6 +126,7 @@ body {
   font-weight: 500;
   cursor: pointer;
   outline: none;
+  font-family: var(--font);
 }
 .sort-select:focus { border-color: var(--cyan); }
 
@@ -111,17 +140,19 @@ body {
 /* Property card */
 .property-card {
   background: var(--bg-card);
-  border: 1px solid var(--border);
+  border: 1px solid var(--border-subtle);
   border-radius: var(--radius);
   padding: 20px;
   min-height: 200px;
   display: flex;
   flex-direction: column;
-  transition: border-color 0.15s;
+  transition: border-color 0.15s, box-shadow 0.15s;
   cursor: pointer;
+  box-shadow: var(--shadow-card);
 }
 .property-card:hover {
   border-color: var(--text-muted);
+  box-shadow: var(--shadow-card-hover);
 }
 
 /* Card header */
@@ -139,11 +170,7 @@ body {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.card-arrow {
-  color: var(--text-muted);
-  font-size: 16px;
-  flex-shrink: 0;
-}
+.card-arrow { color: var(--text-muted); font-size: 16px; flex-shrink: 0; }
 
 /* Metrics 2x2 grid */
 .card-metrics {
@@ -152,10 +179,7 @@ body {
   gap: 8px 16px;
   margin-bottom: 14px;
 }
-.card-metric {
-  display: flex;
-  flex-direction: column;
-}
+.card-metric { display: flex; flex-direction: column; }
 .card-metric .metric-label {
   font-size: 10px;
   text-transform: uppercase;
@@ -167,15 +191,11 @@ body {
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
-.card-metric .metric-change {
-  font-size: 11px;
-  font-weight: 500;
-}
+.card-metric .metric-change { font-size: 11px; font-weight: 500; }
 .metric-value.clicks { color: var(--cyan); }
 .metric-value.impressions { color: var(--purple); }
 .metric-value.ctr { color: var(--orange); }
 .metric-value.position { color: var(--amber); }
-
 .metric-change.positive { color: var(--green); }
 .metric-change.negative { color: var(--red); }
 .metric-change.neutral { color: var(--text-muted); }
@@ -186,10 +206,7 @@ body {
   min-height: 50px;
   position: relative;
 }
-.sparkline-container canvas {
-  width: 100% !important;
-  height: 100% !important;
-}
+.sparkline-container canvas { width: 100% !important; height: 100% !important; }
 
 /* Empty state */
 .empty-state {

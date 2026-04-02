@@ -23,6 +23,10 @@ interface OverviewData {
 let currentData: OverviewData | null = null;
 const sparkCharts: Map<string, Chart> = new Map();
 
+function getCSSVar(name: string): string {
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+}
+
 // --- MCP App ---
 const app = new App({ name: 'BSC Overview', version: '1.0.0' });
 
@@ -98,8 +102,11 @@ function renderCard(p: PropertyOverview, index: number): string {
   return `
     <div class="property-card" data-site-url="${escapeHtml(p.siteUrl)}">
       <div class="card-header">
-        <span class="card-domain">${escapeHtml(p.domain)}</span>
-        <span class="card-arrow">→</span>
+        <div style="display:flex;align-items:center;gap:8px;overflow:hidden">
+          <img src="https://img.logo.dev/${escapeHtml(p.domain)}?token=pk_DkUq1s2HT-q1JYXa2MuOaw&size=32&format=png" alt="" style="width:20px;height:20px;border-radius:4px;object-fit:contain;flex-shrink:0" onerror="this.style.display='none'" />
+          <span class="card-domain">${escapeHtml(p.domain)}</span>
+        </div>
+        <span class="card-arrow">\u2192</span>
       </div>
       <div class="card-metrics">
         <div class="card-metric">
@@ -144,8 +151,8 @@ function renderSparkline(p: PropertyOverview, index: number) {
       datasets: [
         {
           data: clicksData,
-          borderColor: '#22d3ee',
-          backgroundColor: 'rgba(34, 211, 238, 0.08)',
+          borderColor: getCSSVar('--cyan') || '#0891b2',
+          backgroundColor: getCSSVar('--chart-cyan-fill') || 'rgba(8,145,178,0.06)',
           borderWidth: 1.5,
           fill: true,
           tension: 0.3,
@@ -154,8 +161,8 @@ function renderSparkline(p: PropertyOverview, index: number) {
         },
         {
           data: impressionsData,
-          borderColor: '#a78bfa',
-          backgroundColor: 'rgba(167, 139, 250, 0.05)',
+          borderColor: getCSSVar('--purple') || '#7c3aed',
+          backgroundColor: getCSSVar('--chart-purple-fill') || 'rgba(124,58,237,0.04)',
           borderWidth: 1.5,
           fill: true,
           tension: 0.3,
