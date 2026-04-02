@@ -122,7 +122,7 @@ export class Database {
     };
   }
 
-  getLastSyncDate(siteUrl: string): string | null {
+  getLastSyncDate(): string | null {
     const row = this.db.prepare(`
       SELECT MAX(date) as max_date FROM search_analytics
     `).get() as any;

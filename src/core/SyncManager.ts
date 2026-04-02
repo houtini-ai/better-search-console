@@ -254,7 +254,7 @@ export class SyncManager {
     try {
       // Incremental sync: resume from last synced date if no explicit start
       if (!startDate) {
-        const lastDate = db.getLastSyncDate(siteUrl);
+        const lastDate = db.getLastSyncDate();
         if (lastDate) {
           const d = new Date(lastDate);
           d.setDate(d.getDate() + 1);
