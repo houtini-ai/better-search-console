@@ -6,9 +6,9 @@
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg?style=flat-square)](https://opensource.org/licenses/Apache-2.0)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.3-blue?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
 
-**Ask Claude to analyse your Google Search Console data and get real SEO recommendations.**
+**Run a full SEO audit on your site using Claude and your real Google Search Console data.**
 
-The GSC API caps responses at 1,000 rows. Most tools work within that limit, so the AI only sees a fraction of your data. This MCP server syncs your *entire* Search Console dataset into a local SQLite database &mdash; every query, every page, every country, every device &mdash; then lets Claude query it directly. Complete data in, accurate recommendations out.
+Connect this MCP server, sync your GSC data, and ask Claude to find your content decay, cannibalisation, striking distance keywords, CTR problems, and growth opportunities. Claude analyses your *complete* dataset &mdash; not the 1,000-row sample the API normally returns &mdash; and gives you prioritised, actionable recommendations.
 
 ![Dashboard showing 82K clicks, 3.5M impressions, trend chart, and metric toggles for simracingcockpit.gg](images/header-screenshot.png)
 
@@ -18,22 +18,65 @@ The GSC API caps responses at 1,000 rows. Most tools work within that limit, so 
   </a>
 </p>
 
-## What makes this different
-
-Most GSC integrations pipe raw API rows into the context window. You burn tokens on data and get analysis based on a 1,000-row sample. This server flips that:
-
-1. **Full sync, no row limits.** Background pagination pulls every row the API has. A 28-day sync of a mid-size site fetches ~950K rows. Three months can exceed 1.7 million.
-2. **Local SQLite storage.** One database per property, stored on your machine. Queries run in milliseconds. Your data never leaves your computer.
-3. **Claude queries the database, not the raw data.** Pre-built SQL for 16 standard SEO analyses, plus custom SQL for anything else. Claude sees compact result sets (top 50 declining pages, not 50,000 raw rows), so answers are precise and token-efficient.
-4. **Interactive dashboards rendered in Claude Desktop.** Chart.js visualisations built with Vite and served as single-file HTML via the ext-apps protocol. Light and dark theme, metric toggles, regex filtering, period comparison.
-
-The charts give you the visual overview. The real value is what happens next &mdash; ask Claude to interpret the data:
-
-> *"Which pages are losing clicks and what should I do about them?"*
+> **Navigation**
 >
-> *"Find queries ranking 5-20 with high impressions. Which are worth targeting?"*
+> [How to audit your site](#how-to-audit-your-site-with-claude) | [Quick start](#quick-start) | [vs SEOgets](#better-search-console-vs-seogets) | [Tools](#tools) | [Custom SQL](#custom-sql) | [Data retention](#data-retention) | [Development](#development)
+
+## How to Audit Your Site with Claude
+
+Once you've installed the server ([quick start below](#quick-start)), here's how to run a proper SEO audit using conversation with Claude. Each prompt targets a specific audit area, and Claude will query your full dataset to answer.
+
+### 1. Get the lay of the land
+
+Start broad. Ask Claude to show you the dashboard, then follow up:
+
+> *"Show me my search console data for the last 3 months"*
 >
-> *"Compare this month vs last month. What changed?"*
+> *"What's my overall trajectory? Are clicks and impressions trending up or down?"*
+
+### 2. Find your quick wins (striking distance keywords)
+
+These are queries where you're ranking 5-20 with decent impressions &mdash; close to page one but not there yet. Small improvements here deliver outsized returns.
+
+> *"Find queries where I'm ranking between position 5 and 20 with more than 500 impressions. Which pages are these on and what would it take to push them to page one?"*
+
+### 3. Diagnose content decay
+
+Pages that were performing well but are now losing traffic. Catch these early before they fall further.
+
+> *"Which pages have lost the most clicks compared to the previous period? Focus on pages that had at least 50 clicks before."*
+>
+> *"For my top 5 declining pages, what queries are they losing rankings on?"*
+
+### 4. Fix CTR problems
+
+High impressions with low CTR means your title tags and meta descriptions aren't compelling enough, or there's a SERP feature stealing the click.
+
+> *"Show me pages with more than 10,000 impressions but CTR below 2%. What's the average position for each?"*
+>
+> *"For these low-CTR pages, suggest better title tags based on the queries driving impressions."*
+
+### 5. Find cannibalisation
+
+Multiple pages competing for the same query splits your ranking signal.
+
+> *"Find queries where more than one page is ranking. Sort by total clicks so I can see which cannibalisation is actually costing me traffic."*
+
+### 6. Spot new opportunities
+
+Queries that just appeared in your data &mdash; you're starting to rank for something new.
+
+> *"What new queries appeared this month that I wasn't ranking for last month? Which ones have the most impressions?"*
+
+### 7. Analyse by device and country
+
+> *"Compare my mobile vs desktop CTR for my top 20 pages. Are there pages where mobile is significantly worse?"*
+>
+> *"Which countries am I getting impressions from but almost no clicks? Is there a localisation opportunity?"*
+
+### 8. Get the full audit summary
+
+> *"Based on everything you can see in my search console data, give me a prioritised list of the top 5 things I should work on this month to grow organic traffic."*
 
 ![Top queries table with regex filter, showing fov calculator at 9.6K clicks](images/top-queries.png)
 
@@ -42,6 +85,38 @@ The charts give you the visual overview. The real value is what happens next &md
 Claude analyses the full dataset and returns prioritised, specific recommendations:
 
 ![Claude providing detailed SEO recommendations: doubling down on FOV calculator ecosystem, fixing CTR problems on high-impression pages, and identifying affiliate opportunities](images/recomendations-2.png)
+
+## Better Search Console vs SEOgets
+
+This project was inspired by [SEOgets](https://seogets.com?ref=src), which is an excellent GSC analytics platform. If you want a polished, hosted UI with content grouping and topic clustering, [check them out](https://seogets.com?ref=src) &mdash; they're worth the $49/month for teams that need a production dashboard.
+
+That said, this MCP server exists because we wanted something different: an AI-native workflow where Claude directly queries your data and gives you recommendations, not just charts.
+
+Here's an honest comparison:
+
+| Feature | Better Search Console | [SEOgets](https://seogets.com?ref=src) |
+|---------|----------------------|----------|
+| **Price** | Free, open source | $49/month |
+| **Row limit** | None (full pagination) | 50,000 rows |
+| **Data storage** | Local SQLite, unlimited retention | Cloud-hosted |
+| **AI analysis** | Claude queries your data directly, gives recommendations | No LLM integration |
+| **Custom SQL** | Full SQL access to raw data | No |
+| **Content grouping** | No (ask Claude to group by pattern) | Yes, one-click |
+| **Topic clustering** | No (ask Claude to cluster) | Yes, one-click |
+| **Cannibalisation report** | Yes (via SQL or ask Claude) | Yes, built-in |
+| **Striking distance** | Yes (built-in insight) | Yes, built-in |
+| **Content decay** | Yes (via SQL or ask Claude) | Yes, heatmap |
+| **Index monitoring** | No | Yes, up to 5,000 pages |
+| **Shareable reports** | No | Yes, client portal |
+| **SEO testing** | No | Yes, built-in |
+| **Multi-user** | No | Yes, unlimited users |
+| **Hosting** | Self-hosted (your machine) | Fully hosted |
+
+**Where [SEOgets](https://seogets.com?ref=src) wins:** Content grouping, topic clustering, index monitoring, shareable client portals, SEO testing, and a polished hosted UI that doesn't require any setup beyond OAuth. If you're an agency sending reports to clients, [SEOgets](https://seogets.com?ref=src) is the better choice.
+
+**Where Better Search Console wins:** No row limits (we sync everything, not 50K rows), direct AI analysis with actionable recommendations, full SQL access to raw data, completely free, and your data never leaves your machine. If you want Claude to audit your site and tell you what to fix, this is what it's built for.
+
+They solve different problems. Use both if you want.
 
 ## Quick Start
 
@@ -110,16 +185,11 @@ claude mcp add \
 
 Verify with `claude mcp get better-search-console` &mdash; you should see `Status: Connected`.
 
-### Step 3: Start talking to your data
+### Step 3: Start your audit
 
 Tell Claude: *"Show me my search console data"*
 
-The `setup` tool discovers your properties, syncs them in the background, and shows an overview. Initial sync takes 30 seconds to a few minutes depending on data volume. Then ask questions:
-
-- *"What are my fastest-growing queries this month?"*
-- *"Show me pages with high impressions but low CTR"*
-- *"Which queries am I ranking 11-20 for? What would it take to reach page one?"*
-- *"Compare last 28 days vs the 28 days before. What's improving?"*
+The `setup` tool discovers your properties, syncs them in the background, and shows an overview. Initial sync takes 30 seconds to a few minutes depending on data volume. Then follow the [audit guide above](#how-to-audit-your-site-with-claude).
 
 ### Environment Variables
 
@@ -158,27 +228,23 @@ The `setup` tool discovers your properties, syncs them in the background, and sh
 | `summary` | Aggregate metrics with period-over-period changes |
 | `top_queries` | Highest-traffic queries |
 | `top_pages` | Highest-traffic pages |
-| `growing_queries` | Queries gaining clicks |
-| `declining_queries` | Queries losing clicks |
-| `growing_pages` | Pages gaining clicks |
-| `declining_pages` | Pages losing clicks |
+| `growing_queries` / `declining_queries` | Queries gaining or losing clicks |
+| `growing_pages` / `declining_pages` | Pages gaining or losing clicks |
 | `opportunities` | Queries ranking 5-20 with high impressions &mdash; your quick wins |
 | `device_breakdown` | Desktop vs mobile vs tablet |
 | `country_breakdown` | Traffic by country |
-| `page_queries` | All queries driving traffic to a specific page |
-| `query_pages` | All pages ranking for a specific query |
+| `page_queries` / `query_pages` | Queries for a page, or pages for a query |
 | `daily_trend` | Day-by-day metrics |
-| `new_queries` | Queries that appeared in the current period |
-| `lost_queries` | Queries that disappeared |
+| `new_queries` / `lost_queries` | Queries that appeared or disappeared |
 | `branded_split` | Branded vs non-branded traffic |
 
 ## Dashboard Rendering
 
-The interactive dashboards are built with **Chart.js** and **Vite**, bundled into self-contained HTML files using `vite-plugin-singlefile`, and served via the MCP **ext-apps** protocol. They render inside Claude Desktop as embedded iframes.
+The interactive dashboards are built with **Chart.js** and **Vite**, bundled into self-contained HTML files using `vite-plugin-singlefile`, and served via the MCP **ext-apps** protocol as embedded iframes in Claude Desktop.
 
-Features include metric toggles (clicks, impressions, CTR, position), period comparison with dashed overlays, regex query/page filtering, date range presets, and automatic light/dark theme matching your system preference. Site logos are loaded dynamically via logo.dev.
+Features include metric toggles (clicks, impressions, CTR, position), period comparison with dashed overlays, regex query/page filtering, date range presets, and automatic light/dark theme. Site logos load dynamically via logo.dev.
 
-If your MCP client doesn't support ext-apps, all tools return structured data that Claude can analyse directly in text.
+If your MCP client doesn't support ext-apps, all tools return structured data that Claude can analyse in text.
 
 ## Custom SQL
 
@@ -198,7 +264,7 @@ search_analytics (
 )
 ```
 
-**Find cannibalisation** (multiple pages ranking for the same query):
+**Find cannibalisation:**
 
 ```sql
 SELECT query, COUNT(DISTINCT page) as pages, SUM(clicks) as clicks
@@ -263,4 +329,4 @@ Apache-2.0. See [LICENSE](LICENSE) for details.
 
 ---
 
-Built by [Houtini](https://houtini.ai) for the Model Context Protocol community.
+Built by [Houtini](https://houtini.ai) for the Model Context Protocol community. Inspired by the excellent [SEOgets](https://seogets.com?ref=src).
