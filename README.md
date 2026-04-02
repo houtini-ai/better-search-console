@@ -8,7 +8,7 @@
 
 **Run a full SEO audit on your site using Claude and your real Google Search Console data.**
 
-Connect this MCP server, sync your GSC data, and ask Claude to find your content decay, cannibalisation, striking distance keywords, CTR problems, and growth opportunities. Claude analyses your *complete* dataset &mdash; not the 1,000-row sample the API normally returns &mdash; and gives you prioritised, actionable recommendations.
+Connect this MCP server, get your GSC seo data, and ask Claude to find your content decay, cannibalisation, striking distance keywords, CTR problems, and growth opportunities. Claude analyses your *complete* dataset &mdash; not the 1,000-row sample the API normally returns &mdash; and gives you prioritised, actionable recommendations. Just like a good seo consultant. 
 
 ![Dashboard showing 82K clicks, 3.5M impressions, trend chart, and metric toggles for simracingcockpit.gg](images/header-screenshot.png)
 
