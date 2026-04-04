@@ -1,4 +1,4 @@
-# Better Search Console
+# Get SEO data from Google Search Console with the Better Search Console MCP
 
 [![npm version](https://img.shields.io/npm/v/@houtini/better-search-console.svg?style=flat-square)](https://www.npmjs.com/package/@houtini/better-search-console)
 [![Known Vulnerabilities](https://snyk.io/test/github/houtini-ai/better-search-console/badge.svg)](https://snyk.io/test/github/houtini-ai/better-search-console)
